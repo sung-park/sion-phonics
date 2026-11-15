@@ -1,5 +1,5 @@
 // Offline support: app shell precache + cache-first runtime caching for audio, pictures and fonts.
-const VERSION = 'bhp-v1.1.0';
+const VERSION = 'bhp-v1.1.1';
 const SHELL = ['./','index.html','css/app.css','js/app.js','js/data.js','js/phonics.js','js/missions.js','js/activities.js','js/audio.js',
   'js/store.js','js/sprites.js','js/emoji.js','js/items.js','js/rewards.js','manifest.webmanifest','assets/img/icon.svg','assets/img/icon-192.png','assets/audio/manifest.json'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });

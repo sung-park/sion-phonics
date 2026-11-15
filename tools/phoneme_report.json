@@ -1,99 +1,19 @@
 {
- "m": {
-  "source": "dedicated \"Mmmmmm.\" (eleven_multilingual_v2)",
-  "dur": 0.744
- },
- "n": {
-  "source": "dedicated \"Nnnnnn.\" (eleven_multilingual_v2)",
-  "dur": 0.693
- },
- "s": {
-  "source": "dedicated \"Ssssss.\" (eleven_multilingual_v2)",
-  "dur": 0.678
- },
  "sh": {
   "source": "dedicated \"Shhhhh.\" (eleven_multilingual_v2)",
   "dur": 0.665
- },
- "f": {
-  "source": "dedicated \"fffff\" (eleven_multilingual_v2)",
-  "dur": 0.629
  },
  "th": {
   "source": "dedicated \"thhhh\" (eleven_v3)",
   "dur": 0.65
  },
- "z": {
-  "source": "dedicated \"Zzz.\" (eleven_multilingual_v2)",
-  "dur": 0.522
- },
- "h": {
-  "source": "dedicated \"hhhhh\" (eleven_multilingual_v2)",
-  "dur": 0.267
- },
- "b": {
-  "source": "carrier \"bug\" (stop_v)",
-  "dur": 0.11
- },
- "d": {
-  "source": "carrier \"duck\" (stop_v)",
-  "dur": 0.12
- },
- "g": {
-  "source": "carrier \"gum\" (stop_v)",
-  "dur": 0.125
- },
- "j": {
-  "source": "carrier \"jug\" (stop_v)",
-  "dur": 0.195
- },
- "p": {
-  "source": "carrier \"pup\" (stop)",
-  "dur": 0.11
- },
- "t": {
-  "source": "carrier \"tub\" (stop)",
-  "dur": 0.145
- },
- "c": {
-  "source": "carrier \"cup\" (stop)",
-  "dur": 0.145
- },
- "k": {
-  "source": "carrier \"cut\" (stop)",
-  "dur": 0.14
- },
  "ch": {
   "source": "carrier \"chug\" (stop)",
   "dur": 0.15
  },
- "kw": {
-  "source": "carrier \"quick\" (stop_kw)",
-  "dur": 0.22
- },
- "w": {
-  "source": "carrier \"wet\" (glide)",
-  "dur": 0.165
- },
- "y": {
-  "source": "carrier \"yes\" (glide)",
-  "dur": 0.105
- },
- "r": {
-  "source": "carrier \"red\" (glide_long)",
-  "dur": 0.243
- },
- "v": {
-  "source": "carrier \"van\" (fric_v)",
-  "dur": 0.247
- },
  "dh": {
   "source": "carrier \"this\" (fric_v)",
   "dur": 0.17
- },
- "l": {
-  "source": "carrier \"bell\" (coda)",
-  "dur": 0.59
  },
  "ng": {
   "source": "carrier \"sing\" (coda)",
@@ -103,61 +23,141 @@
   "source": "carrier \"sink\" (coda_keep)",
   "dur": 0.35
  },
- "ks": {
-  "source": "carrier \"box\" (coda_keep)",
-  "dur": 0.445
- },
- "a": {
-  "source": "carrier \"baa\" (vowel)",
-  "dur": 0.432
- },
- "e": {
-  "source": "carrier \"heh\" (vowel)",
-  "dur": 0.383
- },
- "i": {
-  "source": "carrier \"hiss\" (vowel)",
-  "dur": 0.299
- },
- "o": {
-  "source": "carrier \"hah\" (vowel)",
-  "dur": 0.437
- },
- "u": {
-  "source": "carrier \"huh\" (vowel)",
-  "dur": 0.43
- },
- "uu": {
-  "source": "carrier \"hood\" (vowel)",
-  "dur": 0.416
+ "oo": {
+  "source": "carrier \"Ooh!\" (vowel_open)",
+  "dur": 0.561
  },
  "ow": {
-  "source": "carrier \"how\" (vowel)",
-  "dur": 0.589
- },
- "oo": {
-  "source": "carrier \"who\" (vowel)",
-  "dur": 0.571
+  "source": "carrier \"Ow!\" (vowel_open)",
+  "dur": 0.578
  },
  "oi": {
-  "source": "carrier \"boy\" (vowel)",
-  "dur": 0.576
+  "source": "carrier \"Oy!\" (vowel_open)",
+  "dur": 0.578
  },
  "aw": {
-  "source": "carrier \"saw\" (vowel)",
-  "dur": 0.532
+  "source": "carrier \"awe\" (vowel_open)",
+  "dur": 0.517
  },
  "ar": {
-  "source": "carrier \"are\" (vowel)",
-  "dur": 0.557
+  "source": "carrier \"are\" (vowel_open)",
+  "dur": 0.542
  },
  "or": {
-  "source": "carrier \"or\" (vowel)",
-  "dur": 0.575
+  "source": "carrier \"ore\" (vowel_open)",
+  "dur": 0.444
  },
  "er": {
-  "source": "carrier \"her\" (vowel)",
-  "dur": 0.578
+  "source": "carrier \"err\" (vowel_open)",
+  "dur": 0.399
+ },
+ "uu": {
+  "source": "carrier \"wood\" (vowel_mid)",
+  "dur": 0.311
+ },
+ "a": {
+  "source": "Open Letter Sounds a.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.44
+ },
+ "e": {
+  "source": "Open Letter Sounds e.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.38
+ },
+ "i": {
+  "source": "Open Letter Sounds i.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.26
+ },
+ "o": {
+  "source": "Open Letter Sounds o.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.36
+ },
+ "u": {
+  "source": "Open Letter Sounds u.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.34
+ },
+ "b": {
+  "source": "Open Letter Sounds b.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.24
+ },
+ "c": {
+  "source": "Open Letter Sounds c.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.18
+ },
+ "d": {
+  "source": "Open Letter Sounds d.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.18
+ },
+ "f": {
+  "source": "Open Letter Sounds f.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.55
+ },
+ "g": {
+  "source": "Open Letter Sounds g.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.31
+ },
+ "h": {
+  "source": "Open Letter Sounds h.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.27
+ },
+ "j": {
+  "source": "Open Letter Sounds j.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.27
+ },
+ "k": {
+  "source": "Open Letter Sounds k.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.23
+ },
+ "l": {
+  "source": "Open Letter Sounds l.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.7
+ },
+ "m": {
+  "source": "Open Letter Sounds m.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.7
+ },
+ "n": {
+  "source": "Open Letter Sounds n.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.7
+ },
+ "p": {
+  "source": "Open Letter Sounds p.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.18
+ },
+ "kw": {
+  "source": "Open Letter Sounds q.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.25
+ },
+ "r": {
+  "source": "Open Letter Sounds r.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.7
+ },
+ "s": {
+  "source": "Open Letter Sounds s.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.55
+ },
+ "t": {
+  "source": "Open Letter Sounds t.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.23
+ },
+ "v": {
+  "source": "Open Letter Sounds v.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.7
+ },
+ "w": {
+  "source": "Open Letter Sounds w.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.34
+ },
+ "ks": {
+  "source": "Open Letter Sounds x.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.61
+ },
+ "y": {
+  "source": "Open Letter Sounds y.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.26
+ },
+ "z": {
+  "source": "Open Letter Sounds z.wav (CC0 1.0, Purple Computer)",
+  "dur": 0.7
  },
  "A": {
   "source": "letter name",

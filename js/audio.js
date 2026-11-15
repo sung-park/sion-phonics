@@ -21,8 +21,8 @@ export function rel(cat, key){
 export const has = (cat,key)=>!!rel(cat,key);
 function load(r){
   if (!buffers.has(r)){
-    // v2 phonemes/letter names get ?v=2 to bust old browser/service-worker caches
-    buffers.set(r, fetch('assets/audio/'+r+(/^(p|l)\//.test(r) ? '?v=2' : '')).then(x=>{ if(!x.ok) throw new Error(r); return x.arrayBuffer(); })
+    // phonemes/letter names get ?v=3 to bust old browser/service-worker caches
+    buffers.set(r, fetch('assets/audio/'+r+(/^(p|l)\//.test(r) ? '?v=3' : '')).then(x=>{ if(!x.ok) throw new Error(r); return x.arrayBuffer(); })
       .then(b=>new Promise((res,rej)=>ctx.decodeAudioData(b,res,rej))).catch(e=>{ buffers.delete(r); throw e; }));
   }
   return buffers.get(r);

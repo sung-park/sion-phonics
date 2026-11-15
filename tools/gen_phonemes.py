@@ -1,5 +1,9 @@
 #!/usr/bin/env python3
-"""Isolated phoneme clips, v2 (natural, not clipped).
+"""Isolated phoneme clips, v3.
+ * PRIMARY SOURCE: Open Letter Sounds (Purple Computer, CC0 1.0) for the 26 letter sounds
+   a e i o u b c d f g h j k l m n p q(kw) r s t v w x(ks) y z  -> only re-padded / loudness-matched.
+   https://github.com/purplecomputerorg/openlettersounds  (set OLS_DIR to its sounds/en-us/marin folder)
+ * Everything below is only used for sounds that set lacks (ch sh th dh ng nk oo uu ow oi aw ar or er):
  * Continuous sounds that ElevenLabs can say on their own (mmm, nnn, sss, shh, fff, thhh, zzz, hhh)
    come from DEDICATED recordings (verified with a phoneme recognizer + spectral checks).
  * The rest are cut from carrier words (ElevenLabs + character timestamps):
@@ -13,24 +17,18 @@ sys.path.insert(0, os.path.dirname(__file__))
 from gen_audio import tts, OUT, stats
 SR = 44100
 # dedicated recordings: id -> (prompt, model, speed, stability)
-DED = {
- 'm':('Mmmmmm.','eleven_multilingual_v2',.85,.8), 'n':('Nnnnnn.','eleven_multilingual_v2',.85,.8),
- 's':('Ssssss.','eleven_multilingual_v2',.85,.8), 'sh':('Shhhhh.','eleven_multilingual_v2',.85,.8),
- 'f':('fffff','eleven_multilingual_v2',.85,.8), 'th':('thhhh','eleven_v3',1.0,.5),
- 'z':('Zzz.','eleven_multilingual_v2',.85,.8), 'h':('hhhhh','eleven_multilingual_v2',.85,.8),
-}
+DED = {'sh':('Shhhhh.','eleven_multilingual_v2',.85,.8), 'th':('thhhh','eleven_v3',1.0,.5)}
+OLS = {'a':'a','e':'e','i':'i','o':'o','u':'u','b':'b','c':'c','d':'d','f':'f','g':'g','h':'h','j':'j','k':'k','l':'l','m':'m',
+       'n':'n','p':'p','kw':'q','r':'r','s':'s','t':'t','v':'v','w':'w','ks':'x','y':'y','z':'z'}
+OLS_DIR = os.environ.get('OLS_DIR', os.path.join(os.path.dirname(__file__),'..','..','third_party','openlettersounds-marin'))
 # target length (s) for continuous sounds (stretched if shorter)
 TARGET = {'m':.75,'n':.7,'s':.7,'sh':.7,'f':.65,'th':.6,'z':.6,'v':.6,'dh':.5,'l':.65,'ng':.6,'r':.5,'h':.3,
           'a':.45,'e':.42,'i':.4,'o':.5,'u':.45,'uu':.45,'ow':.6,'oo':.6,'oi':.6,'aw':.55,'ar':.6,'or':.6,'er':.6}
 # carrier words: id -> (word, mode)
-CAR = {
- 'b':('bug','stop_v'), 'd':('duck','stop_v'), 'g':('gum','stop_v'), 'j':('jug','stop_v'),
- 'p':('pup','stop'), 't':('tub','stop'), 'c':('cup','stop'), 'k':('cut','stop'), 'ch':('chug','stop'), 'kw':('quick','stop_kw'),
- 'w':('wet','glide'), 'y':('yes','glide'), 'r':('red','glide_long'),
- 'v':('van','fric_v'), 'dh':('this','fric_v'),
- 'l':('bell','coda'), 'ng':('sing','coda'), 'nk':('sink','coda_keep'), 'ks':('box','coda_keep'),
- 'a':('baa','vowel'), 'e':('heh','vowel'), 'i':('hiss','vowel'), 'o':('hah','vowel'), 'u':('huh','vowel'), 'uu':('hood','vowel'),
- 'ow':('how','vowel'), 'oo':('who','vowel'), 'oi':('boy','vowel'), 'aw':('saw','vowel'), 'ar':('are','vowel'), 'or':('or','vowel'), 'er':('her','vowel'),
+CAR = {   # vowel carriers are vowel-initial / open syllables (no consonant before the vowel), checked with tools/vowel_check.py
+ 'ch':('chug','stop'), 'dh':('this','fric_v'), 'ng':('sing','coda'), 'nk':('sink','coda_keep'),
+ 'oo':('Ooh!','vowel_open'), 'ow':('Ow!','vowel_open'), 'oi':('Oy!','vowel_open'), 'aw':('awe','vowel_open'),
+ 'ar':('are','vowel_open'), 'or':('ore','vowel_open'), 'er':('err','vowel_open'), 'uu':('wood','vowel_mid'),
 }
 LETTER_NAME = {'A':'a','E':'e','I':'i','O':'o','U':'u'}
 
@@ -83,7 +81,7 @@ def main():
         D = finish(seg, os.path.join(OUT,'p',pid+'.mp3'), fin=.04, fout=.12, target=TARGET.get(pid))
         report[pid]={'source':f'dedicated "{txt}" ({model})','dur':D}
     for pid,(word,mode) in CAR.items():
-        x = load(tts(word+'.', speed=0.8, stability=0.7, timestamps=True)); r,z,hop = feats(x); pk=r.max()
+        x = load(tts(word if word[-1] in '!.' else word+'.', speed=0.8, stability=0.7, timestamps=True)); r,z,hop = feats(x); pk=r.max()
         k0,k1 = active(r, max(pk*0.02,.003)); t_a0=k0*hop; t_a1=k1*hop+.02
         vi=[k for k in range(k0+2,k1) if r[k]>pk*0.5]; v0 = vi[0]*hop if vi else t_a0+.08   # loud vowel onset
         dst=os.path.join(OUT,'p',pid+'.mp3'); fin,fout,tgt=.008,.05,None
@@ -110,6 +108,20 @@ def main():
                 while kk<k1 and z[kk]<0.25 and r[kk]>pk*0.03: kk+=1
                 t1=min(t_a1,kk*hop); tgt=TARGET[pid]
             fin=.03; fout=.09
+        elif mode in ('vowel_open','vowel_closed'):   # loud voiced nucleus, open = keep natural decay
+            idx=[k for k in range(k0,k1+1) if r[k]>pk*0.35 and z[k]<0.2]; s0=idx[0]
+            if mode=='vowel_open':
+                e0=idx[-1]
+                while e0<k1 and r[e0]>pk*0.08 and z[e0]<0.2: e0+=1
+            else:
+                e0=int(np.argmax(r))
+                while e0<k1 and r[e0]>pk*0.35 and z[e0]<0.2: e0+=1
+            t0=s0*hop+.01; t1=e0*hop; fin=.04; fout=.1; tgt=TARGET[pid]
+        elif mode=='vowel_mid':                    # consonant-bounded: middle of the nucleus only
+            kp=int(np.argmax(r)); a_=kp; b_=kp
+            while a_>0 and r[a_]>pk*0.5 and z[a_]<0.2: a_-=1
+            while b_<len(r)-1 and r[b_]>pk*0.5 and z[b_]<0.2: b_+=1
+            L=b_-a_; t0=(a_+int(L*.25))*hop; t1=(b_-int(L*.1))*hop; fin=.04; fout=.1; tgt=.4
         elif mode=='vowel':                     # longest voiced run, drop onset consonant transition
             runs=[]; s=None
             for k in range(k0,k1+1):
@@ -124,11 +136,15 @@ def main():
                 while ke<e and r[ke]>pk*(0.18 if word=='hiss' else 0.3): ke+=1
                 e=ke
             t0=ks*hop-.01; t1=e*hop+.01; fin=.06; fout=.12; tgt=TARGET[pid]
-        D = finish(x[S(t0):S(t1)], dst, fin=fin, fout=fout, target=tgt, minf=0.3 if mode in ('fric_v','vowel','coda') else 0.4)
+        D = finish(x[S(t0):S(t1)], dst, fin=fin, fout=fout, target=tgt, minf=0.3 if mode in ('fric_v','vowel','coda','vowel_mid') else (0.35 if mode.startswith('vowel') else 0.4))
         report[pid]={'source':f'carrier "{word}" ({mode})','dur':D}
+    for pid,l in OLS.items():
+        x = load(os.path.join(OLS_DIR, l+'.wav'))
+        D = finish(x, os.path.join(OUT,'p',pid+'.mp3'), fin=.004, fout=.012)   # already trimmed & faded by the authors
+        report[pid]={'source':f'Open Letter Sounds {l}.wav (CC0 1.0, Purple Computer)','dur':D}
     for pid,l in LETTER_NAME.items():
         shutil.copy(os.path.join(OUT,'l',l+'.mp3'), os.path.join(OUT,'p',pid+'.mp3')); report[pid]={'source':'letter name','dur':None}
-    for pid in list(DED)+list(CAR)+list(LETTER_NAME): manifest['p'][pid]=f'p/{pid}.mp3'
+    for pid in list(DED)+list(CAR)+list(OLS)+list(LETTER_NAME): manifest['p'][pid]=f'p/{pid}.mp3'
     json.dump(manifest, open(mpath,'w'), ensure_ascii=False, indent=0, sort_keys=True)
     json.dump(report, open(os.path.join(os.path.dirname(__file__),'phoneme_report.json'),'w'), indent=1, ensure_ascii=False)
     print(json.dumps(stats))

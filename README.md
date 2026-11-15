@@ -74,4 +74,5 @@
 - 그림 아이콘: [Twemoji](https://github.com/jdecked/twemoji) © Twitter/X & contributors, **CC‑BY 4.0**.
 - 글꼴: Andika (SIL OFL), Jua, Silkscreen (Google Fonts, OFL).
 - 음성: ElevenLabs 로 생성 (영어: Jessica, 한국어: Annie KR).
+- 낱소리(파닉스 음소) 26개: [Open Letter Sounds](https://github.com/purplecomputerorg/openlettersounds) © Purple Computer, **CC0 1.0** (사람이 검수한 a–z 소리). 나머지 이중자음·모음팀 소리는 ElevenLabs로 직접 만들었어요. 자세한 출처: `assets/audio/p/CREDITS.md`
 - 이 앱은 특정 게임·영화·출판사(리틀팍스 포함)와 관련이 없는 비영리 가족 학습용 프로젝트예요.
