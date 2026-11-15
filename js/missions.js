@@ -170,3 +170,21 @@ export function unitItems(u){
   if (u.type==='sight') return u.sight.map(w=>'s:'+w.toLowerCase());
   return [...u.focus.map(g=>'g:'+g), ...u.words.map(w=>'w:'+baseWord(w))];
 }
+
+// ---------- 학교 영어 lesson: listen → vocab → listen&choose → picture quizzes → reply ----------
+import { TALK, talkById } from './talk.js';
+export function buildTalk(id){
+  const L = talkById(id); const others = TALK.filter(t=>t.id!==id);
+  const short = store.state().settings.len === 'short';
+  const pics = pick(L.vocab, short ? 2 : 3);
+  const picStep = v => ({type:'talk_pic', lesson:L, target:v[0], options:shuffle([v, ...pick(L.vocab.filter(x=>x!==v), 2)])});
+  const steps = [
+    {type:'talk_listen', lesson:L},
+    {type:'talk_vocab', lesson:L},
+    {type:'talk_echo', lesson:L, who:'C', target:L.lines[0][1], options:shuffle([L.lines[0][1], ...pick(others.map(t=>t.lines[0][1]), 2)])},
+    picStep(pics[0]), picStep(pics[1]),
+    {type:'talk_reply', lesson:L, question:L.lines[0][1], target:L.lines[1][1], options:shuffle([L.lines[1][1], ...pick(others.map(t=>t.lines[1][1]), 2)])},
+  ];
+  if (pics[2]) steps.push(picStep(pics[2]));
+  return steps;
+}

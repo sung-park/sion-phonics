@@ -5,6 +5,7 @@ import { picOf, hasPic } from './missions.js';
 import { emojiSrc } from './emoji.js';
 import { CONFUSIONS, PRAISE, ENCOURAGE, LETTERS } from './data.js';
 import * as store from './store.js';
+import { block, hero } from './sprites.js';
 
 export const h = (html) => { const t = document.createElement('template'); t.innerHTML = html.trim(); return t.content.firstElementChild; };
 const esc = s => String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -364,6 +365,66 @@ R.mnemonic = (s, ctx) => {
   ctx.setText('헷갈리는 글자를 구별하는 비밀 작전! 🕵️');
 };
 
+// ---------- 학교 영어 (talk missions) ----------
+const talkPic = (p, size='') => p.startsWith('#') ? `<span class="numcard ${size}">${esc(p.slice(1))}</span>` : `<img src="${emojiSrc(p)}" alt="" draggable="false">`;
+const cubiFig = (size=96) => `<div class="figure cubi">${block('power',{size, face:true})}<span class="who">Cubi</span></div>`;
+const heroFig = (size=110) => { const st = store.state(); return `<div class="figure hero-f">${hero(st.suit.length?st.suit:['helmet','cape'], st.color, size)}<span class="who">${esc(st.name||'Hero')}</span></div>`; };
+const nextBtn = (label='다음 ▶') => `<button class="btn hero small talk-next hidden">${label}</button>`;
+
+R.talk_listen = (s, ctx) => {
+  const L = s.lesson;
+  const node = h(`<div class="talk-scene"><div class="talk-bg">${talkPic(L.scene)}</div>
+    <div class="talk-row">${cubiFig()}<div class="bubbles">${L.lines.map(([who,t],i)=>`<button class="tbubble ${who==='C'?'left':'right'}" data-i="${i}">${esc(t)}</button>`).join('')}</div>${heroFig()}</div>
+    ${nextBtn()}</div>`);
+  ctx.stage.append(node);
+  const bub = [...node.querySelectorAll('.tbubble')]; const nb = node.querySelector('.talk-next');
+  const playLine = async i => { bub.forEach(b=>b.classList.remove('lit')); bub[i].classList.add('lit'); node.querySelector(L.lines[i][0]==='C'?'.cubi':'.hero-f').classList.add('talking');
+    await A.play('tk', L.lines[i][1]); node.querySelectorAll('.figure').forEach(f=>f.classList.remove('talking')); bub[i].classList.remove('lit'); };
+  const all = async () => { for (let i=0;i<bub.length;i++){ await playLine(i); await A.wait(450); } nb.classList.remove('hidden'); };
+  ctx.replay = all;
+  bub.forEach(b=>b.onclick = ()=>playLine(+b.dataset.i));
+  nb.onclick = ()=>{ A.sfx('tap'); ctx.done({learn:true}); };
+  ctx.say('talk_listen').then(all);
+};
+R.talk_vocab = (s, ctx) => {
+  const L = s.lesson; const heard = new Set();
+  const node = h(`<div class="talk-vocab"><div class="vgrid">${L.vocab.map(([en,p,ko],i)=>`<button class="vcard" data-i="${i}">${talkPic(p)}<span class="ven">${esc(en)}</span><span class="vko">${esc(ko)}</span></button>`).join('')}</div>${nextBtn()}</div>`);
+  ctx.stage.append(node);
+  const cards = [...node.querySelectorAll('.vcard')]; const nb = node.querySelector('.talk-next');
+  const hear = async i => { cards.forEach(c=>c.classList.remove('lit')); cards[i].classList.add('lit','seen'); heard.add(i); A.sfx('tap'); await A.play('tk', L.vocab[i][0]); cards[i].classList.remove('lit');
+    if (heard.size >= cards.length) nb.classList.remove('hidden'); else cards.forEach((c,k)=>c.classList.toggle('pulse', !heard.has(k) && k===Math.min(...[...cards.keys()].filter(x=>!heard.has(x))))); };
+  cards.forEach(c=>c.onclick = ()=>hear(+c.dataset.i));
+  ctx.replay = ()=>{ const k = [...cards.keys()].find(x=>!heard.has(x)); hear(k ?? 0); };
+  nb.onclick = ()=>{ A.sfx('tap'); ctx.done({learn:true}); };
+  ctx.say('talk_vocab').then(()=>hear(0));
+};
+R.talk_echo = (s, ctx) => {
+  const node = h(`<div class="talk-q"><div class="talk-row small">${s.who==='C'?cubiFig(76):heroFig(86)}<button class="tbubble mystery ${s.who==='C'?'left':'right'}">🔊 ? ? ?</button></div>
+    <div class="optlist">${s.options.map(o=>`<button class="optline" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div></div>`);
+  ctx.stage.append(node);
+  const replay = () => A.play('tk', s.target); ctx.replay = replay; node.querySelector('.tbubble').onclick = replay;
+  choice(ctx, node, [...node.querySelectorAll('.optline')], v=>v===s.target, {replay, onRight: async ()=>{ node.querySelector('.tbubble').textContent = s.target; node.querySelector('.tbubble').classList.remove('mystery'); await A.play('tk', s.target); await praise(); }});
+  ctx.say('talk_echo').then(replay);
+};
+R.talk_pic = (s, ctx) => {
+  const node = h(`<div style="display:flex;flex-direction:column;align-items:center;gap:24px">
+    <button class="replay big" style="width:120px;height:120px;font-size:56px;border-radius:32px" aria-label="다시 듣기">🔊</button>
+    <div class="tiles">${s.options.map(([en,p])=>`<button class="tile pic" data-v="${esc(en)}" aria-label="그림">${talkPic(p,'in-tile')}</button>`).join('')}</div></div>`);
+  ctx.stage.append(node);
+  const replay = () => A.play('tk', s.target); ctx.replay = replay; node.querySelector('.replay').onclick = replay;
+  choice(ctx, node, [...node.querySelectorAll('.tile')], v=>v===s.target, {replay, onRight: async ()=>{ await A.play('tk', s.target); await praise(); }});
+  ctx.say('talk_pic').then(replay);
+};
+R.talk_reply = (s, ctx) => {
+  const node = h(`<div class="talk-q"><div class="talk-row small">${cubiFig(76)}<button class="tbubble left">${esc(s.question)}</button></div>
+    <div class="optlist">${s.options.map(o=>`<button class="optline" data-v="${esc(o)}">${esc(o)}</button>`).join('')}</div></div>`);
+  ctx.stage.append(node);
+  const replay = () => A.play('tk', s.question); ctx.replay = replay; node.querySelector('.tbubble').onclick = replay;
+  choice(ctx, node, [...node.querySelectorAll('.optline')], v=>v===s.target, {replay, onRight: async v=>{ await A.play('tk', v); await praise(); }});
+  ctx.say('talk_reply').then(replay);
+};
+
 export const RENDER = R;
 export const PROMPT_KEY = { intro:'intro', pick_sound:'pick_sound', which_letter:'which_letter', first_sound:'first_sound', case_match:'case_match',
-  tap_all:'tap_all', blend:'blend', build:'build', pick_word:'pick_word', pic_match:'pic_match', sentence:'sentence', magic:'magic', sight_intro:'sight', mnemonic:'trainer' };
+  tap_all:'tap_all', blend:'blend', build:'build', pick_word:'pick_word', pic_match:'pic_match', sentence:'sentence', magic:'magic', sight_intro:'sight', mnemonic:'trainer',
+  talk_listen:'talk_listen', talk_vocab:'talk_vocab', talk_echo:'talk_echo', talk_pic:'talk_pic', talk_reply:'talk_reply' };

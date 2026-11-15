@@ -15,6 +15,8 @@ export const TIERS = [
   {pool:['iron','gold','ruby','hellrock','lava','glow'],     boss:['obsidian','diamond','pick_diamond','spyglass'],             clear:'emerald',  pet:'pet_fox'},
   {pool:['gold','ruby','sapphire','obsidian','endstone'],        boss:['diamond','emerald','goldblock','diamondblock','sword_diamond'], clear:'power', pet:'pet_dragon'},
 ];
+// 학교 영어 discs, in the order they are earned (lesson 2, 4, ... 18)
+export const DISC_ORDER = ['disc_meadow','disc_cave','disc_mine','disc_jungle','disc_ocean','disc_ancient','disc_lava','disc_end','disc_gold'];
 export const worldIndex = uid => Math.max(0, WORLDS.findIndex(w=>w.units.includes(uid)));
 const pickOne = (arr, rnd=Math.random) => arr[Math.floor(rnd()*arr.length)];
 
@@ -37,6 +39,7 @@ export function allowedUpTo(wi){
   const s = new Set();
   TIERS.slice(0, wi+1).forEach(t=>{ t.pool.forEach(x=>s.add(x)); t.boss.forEach(x=>s.add(x)); });
   TIERS.slice(0, wi).forEach(t=>{ s.add(t.clear); s.add(t.pet); });   // rewards of finished worlds
+  DISC_ORDER.forEach(d=>s.add(d));                                  // 학교 영어 discs are never migrated away
   return s;
 }
 

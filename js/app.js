@@ -3,12 +3,15 @@ import { UNITS, WORLDS, CONFUSIONS, KO, LETTERS } from './data.js';
 import * as A from './audio.js';
 import * as store from './store.js';
 import { block, hero, icon, cloud, BLOCKS, SUIT_ORDER, SUIT_NAMES, HERO_COLORS } from './sprites.js';
-import { buildMission, buildTrainer, MISSION_NAMES, MISSION_DESC, unitIndex, unitItems } from './missions.js';
+import { buildMission, buildTrainer, buildTalk, MISSION_NAMES, MISSION_DESC, unitIndex, unitItems } from './missions.js';
 import { RENDER, PROMPT_KEY, h, praise } from './activities.js';
 import { emojiSrc } from './emoji.js';
 import * as REW from './rewards.js';
 import { ITEMS, CATS, itemArt, itemName, chestArt, TOTAL, ownedCount } from './items.js';
 import { initFit } from './fit.js';
+import { STORIES, storyById } from './stories.js';
+import { TALK, talkById } from './talk.js';
+import { storyTokens } from './phonics.js';
 
 const $app = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -46,6 +49,9 @@ function route(){
   if (r==='map') return worldMap();
   if (r==='trainer') return trainer();
   if (r==='inv') return inventory();
+  if (r==='library') return library();
+  if (r==='talk') return talkCorner();
+  if (r.startsWith('story/')) return storyReader(r.slice(6));
   if (r==='parent') return parentGate();
   return home();
 }
@@ -70,6 +76,21 @@ function nextMission(){
   for (let i=0;i<startI;i++){ const u = UNITS[i]; const us = store.unitState(u.id); const idx = us.m.findIndex(x=>!x); if (idx>=0) return {unit:u, idx}; }
   return {unit: UNITS[UNITS.length-1], idx:2};
 }
+
+// ---- story scrolls: unlocked by clearing the boss mission of their unit (or when the parent start/unlock setting covers it)
+export function storyUnlocked(st){
+  const s = S().settings; if (s.unlockAll) return true;
+  return store.unitDone(st.unlock) || unitIndex(st.unlock) < unitIndex(s.start || 'b1u1');
+}
+const unlockedStories = () => STORIES.filter(storyUnlocked).map(s=>s.id);
+// ---- 학교 영어: lessons open one by one; the next new lesson opens after any phonics mission or on a new day
+export function talkState(){
+  const st = S(); const done = TALK.filter(t=>st.talk[t.id]?.n).length; const gate = st.talkGate;
+  const fresh = !gate || st.missionCount > gate.mc || store.dateKey() !== gate.day;
+  const open = st.settings.unlockAll ? TALK.length : Math.min(TALK.length, done + (fresh ? 1 : 0));
+  return {done, open: Math.max(open, done), waiting: !fresh && done < TALK.length && !st.settings.unlockAll};
+}
+const talkOpen = i => i < talkState().open || !!S().talk[TALK[i].id]?.n;
 
 // world the child has actually reached (start setting, next mission, any finished mission) - drives reward tiers
 function progressWorld(){
@@ -139,12 +160,23 @@ function home(){
         <div class="quick">
           <button class="qbtn" data-go="map">${block('grass',{size:54})}월드 지도</button>
           <button class="qbtn" data-go="trainer"><span class="ic">🕵️</span>글자 훈련소</button>
+          <button class="qbtn" data-go="library"><span class="ic">📚</span>이야기 책<span class="qbadge">${S().stories ? Object.keys(S().stories).filter(k=>S().stories[k].n).length : 0}/${STORIES.length}</span></button>
           <button class="qbtn" data-go="inv">${icon('chest',54)}인벤토리</button>
         </div></div>
+      ${talkCard()}
     </div></div>`);
   el.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ A.sfx('tap'); go(b.dataset.go); });
   el.querySelector('.start').onclick = ()=>{ A.unlock(); startMission(nm.unit.id, nm.idx); };
   el.querySelectorAll('.edit-hero').forEach(b=>b.onclick=()=>{ A.sfx('tap'); editHero(home); });
+  const tb = el.querySelector('.talk-go'); if (tb) tb.onclick = ()=>{ A.unlock(); A.sfx('tap'); const k = +tb.dataset.k; if (k>=0) startTalk(TALK[k].id); else go('talk'); };
+  const unread = STORIES.filter(s=>storyUnlocked(s) && !S().stories[s.id]?.n).length;
+  if (unread) el.querySelector('[data-go="library"]').classList.add('has-new');
+}
+function talkCard(){
+  const ts = talkState(); const k = ts.done < TALK.length && ts.done < ts.open ? ts.done : -1; const L = k>=0 ? TALK[k] : null;
+  return `<div class="talk-cta card"><div class="tc-ic">🗣️</div><div style="flex:1;min-width:0"><div class="muted" style="font-size:15px">학교 영어 · 초3 교과 표현 <span class="px" style="font-size:13px">${ts.done}/${TALK.length}</span></div>
+    <h3>${L ? `Lesson ${k+1} · ${esc(L.ko)}` : ts.done>=TALK.length ? '모든 대화 완료! 🎉 복습해 볼까?' : '다음 대화는 파닉스 미션 1개를 하거나 내일 열려요'}</h3></div>
+    <button class="btn blue small talk-go" data-k="${k}">${L ? '▶ 대화하기' : '목록'}</button></div>`;
 }
 // change hero name / colour any time (progress is untouched: only name & color fields change)
 function editHero(after){
@@ -200,6 +232,7 @@ function toast(msg){ const t = h(`<div style="position:fixed;left:50%;bottom:110
 
 // ---------------- mission runner ----------------
 function startMission(uid, idx){ const steps = buildMission(uid, idx); runMission(steps, {kind:'unit', uid, idx}); }
+function startTalk(id){ runMission(buildTalk(id), {kind:'talk', talk:id}); }
 function runMission(steps, meta){
   const t0 = Date.now(); let i = 0, xp = 0, correct = 0, scored = 0; const spoken = new Set();
   const u = meta.uid ? unitOf(meta.uid) : null;
@@ -212,10 +245,11 @@ function runMission(steps, meta){
   const replayBtn = el.querySelector('.replay'), fxL = el.querySelector('.fx'), mascot = el.querySelector('.mascot');
   const onPlay = p => replayBtn.classList.toggle('playing', p); A.audioState.listeners.add(onPlay);
   const cleanup = () => A.audioState.listeners.delete(onPlay);
-  el.querySelector('.quit').onclick = () => confirmQuit(()=>{ cleanup(); A.stop(); go(meta.kind==='trainer'?'trainer':''); });
+  el.querySelector('.quit').onclick = () => confirmQuit(()=>{ cleanup(); A.stop(); go(meta.kind==='trainer'?'trainer':meta.kind==='talk'?'talk':''); });
   mascot.onclick = () => { mascot.classList.remove('hop'); void mascot.offsetWidth; mascot.classList.add('hop'); A.sfx('tap'); };
   // preload audio for the mission
-  const pre = []; steps.forEach(s=>{ if (s.word) pre.push(['w', s.word]); if (s.key) pre.push(['w', s.key]); if (s.text) pre.push(['s', s.text]); if (s.sound) pre.push(['p', s.sound]); (s.options||[]).forEach(o=>pre.push(['w',o])); });
+  const pre = []; steps.forEach(s=>{ if (s.word) pre.push(['w', s.word]); if (s.key) pre.push(['w', s.key]); if (s.text) pre.push(['s', s.text]); if (s.sound) pre.push(['p', s.sound]); (s.options||[]).forEach(o=>pre.push(['w',o]));
+    if (s.lesson){ s.lesson.lines.forEach(([,t])=>pre.push(['tk',t])); s.lesson.vocab.forEach(([t])=>pre.push(['tk',t])); } });
   A.preload(pre);
   const fx = {
     burst(target, n=12){ if (S().settings.calm) n = 4; const r = target.getBoundingClientRect(); const cx = r.left+r.width/2, cy = r.top+r.height/2;
@@ -238,7 +272,7 @@ function runMission(steps, meta){
       say: async (key) => { bubble.innerHTML = (s.review?'🔁 <b>복습!</b> ':'') + esc(KO[key] || ''); if (spoken.has(key)) return; spoken.add(key); await A.play('ko', key); },
       setText: (html) => { bubble.innerHTML = html; },
       mascotHop: () => { mascot.classList.remove('hop'); void mascot.offsetWidth; mascot.classList.add('hop'); },
-      miss: (chosen, target) => { const tg = target || s.target || s.word; store.recordConfusion(String(tg).toLowerCase(), String(chosen).toLowerCase()); },
+      miss: (chosen, target) => { if (meta.kind==='talk') return; const tg = target || s.target || s.word; store.recordConfusion(String(tg).toLowerCase(), String(chosen).toLowerCase()); },
       done: (res) => {
         if (finished) return; finished = true;
         if (!res.learn){ scored++; if (res.correct) correct++; if (s.item) store.record(s.item, res.correct, meta.uid || ('trainer:'+meta.conf)); }
@@ -253,19 +287,26 @@ function runMission(steps, meta){
   const finish = () => {
     cleanup(); const secs = Math.round((Date.now()-t0)/1000); const acc = scored ? correct/scored : 1;
     xp += 20; const lvUp = store.addXP(xp); store.touchDay(secs);
-    let first = false, suit = null;
+    let first = false, suit = null, newStories = [], disc = null;
     if (meta.kind==='unit'){
+      const before = new Set(unlockedStories());
       first = store.completeMission(meta.uid, meta.idx, acc);
       const w = worldOf(meta.uid);
       if (meta.idx===2 && w.units.every(store.unitDone) && store.addSuit(w.suit)) suit = w.suit;
+      newStories = unlockedStories().filter(id=>!before.has(id));
+    } else if (meta.kind==='talk'){
+      first = store.talkDone(meta.talk, acc);
+      const li = TALK.findIndex(t=>t.id===meta.talk);   // every 2nd lesson's first clear also gives a speaking disc
+      if (first && li % 2 === 1) disc = REW.DISC_ORDER[(li-1)/2] || null;
     } else { const t = S().trainer; t[meta.conf] = (t[meta.conf]||0)+1; store.save(); }
     const wi = meta.uid ? REW.worldIndex(meta.uid) : progressWorld();
-    const got = REW.pickReward(meta, acc, !!suit, wi, S().inv);
+    const got = REW.pickReward(meta.kind==='talk' ? {kind:'trainer'} : meta, acc, !!suit, wi, S().inv);
+    if (disc) got.bonus = disc;
     const isNew = id => !(S().inv[id] > 0);
     const reward = got.main, rewardNew = isNew(reward); store.addBlock(reward);
     const bonus = got.bonus || null, bonusNew = bonus ? isNew(bonus) : false; if (bonus) store.addBlock(bonus);
-    store.logSession({kind:meta.kind, unit:meta.uid||meta.conf, idx:meta.idx ?? null, title: u ? `${u.title} · ${MISSION_NAMES[meta.idx]}` : `훈련소 ${meta.conf}`, correct, total:scored, secs, xp});
-    complete({meta, acc, xp, secs, reward, rewardNew, bonus, bonusNew, lvUp, suit});
+    store.logSession({kind:meta.kind, unit:meta.uid||meta.conf||meta.talk, idx:meta.idx ?? null, title: u ? `${u.title} · ${MISSION_NAMES[meta.idx]}` : meta.kind==='talk' ? `학교 영어 · ${talkById(meta.talk).ko}` : `훈련소 ${meta.conf}`, correct, total:scored, secs, xp});
+    complete({meta, acc, xp, secs, reward, rewardNew, bonus, bonusNew, lvUp, suit, newStories});
   };
   next();
 }
@@ -276,7 +317,7 @@ function confirmQuit(onYes){
   document.body.append(bg); bg.querySelector('.no').onclick = ()=>bg.remove(); bg.querySelector('.yes').onclick = ()=>{ bg.remove(); onYes(); };
 }
 // ---------------- complete ----------------
-function complete({meta, acc, xp, secs, reward, rewardNew, bonus, bonusNew, lvUp, suit}){
+function complete({meta, acc, xp, secs, reward, rewardNew, bonus, bonusNew, lvUp, suit, newStories=[]}){
   const stars = acc>=0.8 ? 3 : acc>=0.5 ? 2 : 1; const nm = nextMission();
   const rest = store.todaySecs() > 15*60;
   const el = screen('complete', `<div class="scroll" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding-top:10px">
@@ -286,15 +327,16 @@ function complete({meta, acc, xp, secs, reward, rewardNew, bonus, bonusNew, lvUp
       <div class="reward">${itemArt(reward,150)}${rewardNew?'<span class="newb">NEW!</span>':''}</div><div class="sparks">${Array.from({length:14},(_,i)=>`<i style="--a:${i*360/14}deg;--d:${70+(i%3)*28}px"></i>`).join('')}</div></button>
     <div class="tap-hint muted">상자를 눌러 열어 봐!</div>
     <div class="reward-name chip hidden" style="font-size:22px">🎁 ${esc(itemName(reward))} 획득! <span class="rar">${'<i></i>'.repeat(ITEMS[reward].rarity)}</span></div>
-    ${bonus ? `<div class="bonus-card hidden">${itemArt(bonus,96)}<div><div style="color:var(--gold)">월드 클리어 보너스! 새 펫 친구</div><div style="font-size:26px">${esc(itemName(bonus))}${bonusNew?' <span class="newb inl">NEW!</span>':''}</div></div></div>`:''}
+    ${bonus ? `<div class="bonus-card hidden">${itemArt(bonus,96)}<div><div style="color:var(--gold)">${ITEMS[bonus].cat==='disc' ? '학교 영어 보너스! 말하기 디스크' : '월드 클리어 보너스! 새 펫 친구'}</div><div style="font-size:26px">${esc(itemName(bonus))}${bonusNew?' <span class="newb inl">NEW!</span>':''}</div></div></div>`:''}
     <div class="dex-line chip hidden">📖 도감 <b class="px">${ownedCount(S().inv)}/${TOTAL}</b></div>
     ${suit ? `<div class="suit-unlock">${hero(S().suit, S().color, 90)}<div><div style="color:var(--gold)">월드 클리어! 새 수트 파츠</div><div style="font-size:26px">${SUIT_NAMES[suit]} 장착!</div></div></div>`:''}
+    ${newStories.map(id=>{ const st = storyById(id); return `<button class="story-unlock hidden" data-s="${id}"><span class="scroll-ic">📜</span><div style="text-align:left"><div style="color:var(--gold)">새 이야기 책 발견!</div><div class="en" style="font-size:24px">${esc(st.title)}</div><div class="muted" style="font-size:15px">${esc(st.ko)} · 눌러서 읽기 ▶</div></div></button>`; }).join('')}
     ${lvUp ? `<div class="chip" style="font-size:22px;background:var(--gold)">⬆ 레벨 업! LV ${store.levelInfo().lv}</div>`:''}
     <div class="stats"><div class="stat"><b>+${xp}</b><span>XP</span></div><div class="stat"><b>${Math.round(acc*100)}%</b><span>정답률</span></div><div class="stat"><b>${Math.max(1,Math.round(secs/60))}분</b><span>시간</span></div></div>
     ${rest ? `<div class="card" style="font-size:19px;text-align:center">🏕️ 오늘 정말 많이 했어! 물 한 잔 마시고 쉬었다 하자.</div>`:''}
     <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center">
       <button class="btn ghost gohome">🏠 홈으로</button>
-      ${meta.kind==='unit' ? `<button class="btn hero nextm">다음 미션 ▶</button>` : `<button class="btn hero again">한 번 더 ▶</button>`}
+      ${meta.kind==='unit' ? `<button class="btn hero nextm">다음 미션 ▶</button>` : meta.kind==='talk' ? `<button class="btn hero totalk">🗣️ 학교 영어</button>` : `<button class="btn hero again">한 번 더 ▶</button>`}
     </div></div>`);
   const chest = el.querySelector('.chest');
   const rare = ITEMS[reward].rarity >= 3;
@@ -305,12 +347,15 @@ function complete({meta, acc, xp, secs, reward, rewardNew, bonus, bonusNew, lvUp
       el.querySelector('.reward-name').classList.remove('hidden'); el.querySelector('.dex-line').classList.remove('hidden');
       setTimeout(()=>A.play('x', ITEMS[reward].cat==='block' ? 'New block!' : 'New treasure!'), 600);
       const bc = el.querySelector('.bonus-card'); if (bc) setTimeout(()=>{ bc.classList.remove('hidden'); A.sfx('rare'); }, 1500);
+      const su = el.querySelectorAll('.story-unlock'); if (su.length) setTimeout(()=>{ su.forEach(x=>x.classList.remove('hidden')); A.sfx('level'); A.play('ko','story_new'); }, bc ? 2600 : 1600);
       if (lvUp) setTimeout(()=>A.sfx('level'), bc ? 2600 : 1500); }, 350); };
   chest.onclick = open; setTimeout(open, 2600);
   A.seq([['x','Mission complete!'], 200]);
   el.querySelector(".gohome").onclick = ()=>go("");
   const nb = el.querySelector('.nextm'); if (nb) nb.onclick = ()=>startMission(nm.unit.id, nm.idx);
   const ab = el.querySelector('.again'); if (ab) ab.onclick = ()=>runMission(buildTrainer(meta.conf), meta);
+  const tt = el.querySelector('.totalk'); if (tt) tt.onclick = ()=>go('talk');
+  el.querySelectorAll('.story-unlock').forEach(b=>b.onclick = ()=>{ A.sfx('tap'); go('story/'+b.dataset.s); });
 }
 
 // ---------------- trainer ----------------
@@ -335,14 +380,111 @@ function inventory(){
       <div class="card"><h3 class="panel-title">🦸 ${esc(st.name)}의 히어로 수트</h3>
         <div class="suitgrid"><div class="hero-stage" style="width:170px;height:190px">${hero(st.suit, st.color, 180)}</div>
           <div class="suitparts">${SUIT_ORDER.map((p,i)=>`<div class="part ${st.suit.includes(p)?'on':''}"><span class="dot"></span><div><div>${SUIT_NAMES[p]}</div><div class="muted" style="font-size:13px">${esc(WORLDS[i].name)} 클리어</div></div></div>`).join('')}</div></div></div>
+      <div class="card"><div class="dex-head"><h3 class="panel-title" style="margin:0">📚 이야기 책장</h3><span class="chip px">${STORIES.filter(s=>st.stories[s.id]?.n).length}/${STORIES.length}</span></div>
+        <p class="muted" style="margin:6px 0 10px;font-size:15px">보스를 깨면 이야기 책이 하나씩 열려요. 다 읽은 책에는 ✔ 표시!</p>${shelfHTML()}</div>
       <div class="card"><div class="dex-head"><h3 class="panel-title" style="margin:0">📖 보물 도감</h3><span class="chip px">${ownedCount(st.inv)}/${TOTAL}</span></div>
         <div class="lvbar" style="margin:10px 0 4px"><i style="width:${Math.round(ownedCount(st.inv)/TOTAL*100)}%"></i></div>
-        <p class="muted" style="margin:4px 0 6px;font-size:15px">초원에서 출발해 동굴·광산·정글·바다 유적·고대 도시·지하세계를 지나 끝의 차원까지! 깊이 갈수록 귀한 보물이 나와요. 도구와 귀한 광석은 보스 미션에서, 펫 친구는 월드를 클리어하면 만나요!</p>
+        <p class="muted" style="margin:4px 0 6px;font-size:15px">초원에서 출발해 동굴·광산·정글·바다 유적·고대 도시·지하세계를 지나 끝의 차원까지! 깊이 갈수록 귀한 보물이 나와요. 도구와 귀한 광석은 보스 미션에서, 펫 친구는 월드를 클리어하면 만나요! 💿 디스크는 학교 영어에서 모아요.</p>
         ${CATS.map(c=>{ const ks = Object.keys(ITEMS).filter(k=>ITEMS[k].cat===c.id).sort((x,y)=>(REW.firstWorld(x)-REW.firstWorld(y)) || (ITEMS[x].rarity-ITEMS[y].rarity)); const have = ks.filter(k=>st.inv[k]>0).length;
           return `<div class="zone"><div class="zone-t">${c.emoji} ${c.name} <span class="muted px" style="font-size:13px">${have}/${ks.length}</span></div><div class="inv">${ks.map(k=>{ const it = ITEMS[k]; const n = st.inv[k]||0;
           return `<div class="slotinv ${n?'':'none'} ${it.cat==='pet'?'pet':''}"><span class="cnt">${n>1?'×'+n:''}</span><span class="${n?'':'sil'}">${itemArt(k,64)}</span><span class="nm">${n?esc(it.name):'???'}</span><span class="rar">${'<i></i>'.repeat(it.rarity)}</span></div>`; }).join('')}</div></div>`; }).join('')}</div>
     </div></div>`);
+  wireBack(el); wireShelf(el);
+}
+
+// ---------------- story scrolls: bookshelf & reader ----------------
+function shelfHTML(){
+  const st = S();
+  return `<div class="shelf">${STORIES.map(s=>{ const open = storyUnlocked(s); const read = st.stories[s.id]?.n || 0; const w = WORLDS.find(x=>x.id===s.world); const u = unitOf(s.unlock);
+    return `<button class="bookc biome-${w.biome} ${open?'':'locked'} ${open&&!read?'new':''}" data-s="${s.id}">
+      <span class="bcover">${open ? `<img src="${emojiSrc(s.cover)}" alt="">` : '🔒'}</span>
+      <span class="btitle en">${open ? esc(s.title) : '???'}</span><span class="bko">${open ? esc(s.ko) : `${u.book}권 ${u.unit}단원 보스`}</span>
+      ${read ? `<span class="bread">✔ ${read}번</span>` : open ? '<span class="bread nw">NEW</span>' : ''}</button>`; }).join('')}</div>`;
+}
+function wireShelf(el){
+  el.querySelectorAll('.bookc').forEach(b=>b.onclick=()=>{ A.sfx('tap'); if (b.classList.contains('locked')){ const s = storyById(b.dataset.s); const u = unitOf(s.unlock); toast(`${u.book}권 ${u.unit}단원 보스를 깨면 열려요! 🔒`); return; } go('story/'+b.dataset.s); });
+}
+function library(){
+  const st = S(); const nRead = STORIES.filter(s=>st.stories[s.id]?.n).length; const nOpen = STORIES.filter(storyUnlocked).length;
+  const el = screen('', `<div class="topbar">${backBtn()}<h2 style="margin:0;font-size:26px">📚 이야기 책장</h2><div class="spacer"></div><span class="chip px">${nRead}/${STORIES.length}</span></div>
+    <div class="scroll"><div style="max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+      <div class="card" style="display:flex;gap:14px;align-items:center">${block('power',{size:60,face:true})}<div style="font-size:18px;line-height:1.5">
+        보스 미션을 깨면 <b>배운 소리로만</b> 읽을 수 있는 이야기 책이 열려요!<br><span class="muted" style="font-size:15px">열린 책 ${nOpen}권 · 다 읽은 책 ${nRead}권 · 모르는 단어는 눌러서 들어 봐요.</span></div></div>
+      ${shelfHTML()}</div></div>`);
+  wireBack(el); wireShelf(el);
+}
+const pagePic = p => p==='cubi' ? `<span class="ppic">${block('power',{size:120,face:true})}</span>` : p==='hero' ? `<span class="ppic">${hero(S().suit.length?S().suit:['helmet','cape'], S().color, 130)}</span>` : `<img class="ppic" src="${emojiSrc(p)}" alt="">`;
+function storyReader(id){
+  const st = storyById(id); if (!st || !storyUnlocked(st)) return library();
+  let pg = -1; let reading = 0;
+  const el = screen('reader', `<div class="topbar"><button class="iconbtn back" aria-label="책장">⬅</button><div class="rtitle en">${esc(st.title)}</div><div class="spacer"></div>
+      <div class="dots">${st.pages.map(()=>'<i></i>').join('')}</div></div>
+    <div class="book-stage"><div class="page"></div></div>
+    <div class="reader-bar"><button class="btn ghost small prev" aria-label="이전 쪽">◀</button><button class="btn blue small readme">🔊 읽어 줘</button><button class="btn hero small nextp">다음 ▶</button></div>`);
+  el.querySelector('.back').onclick = ()=>{ A.stop(); A.sfx('tap'); go('library'); };
+  const page = el.querySelector('.page'), dots = [...el.querySelectorAll('.dots i')];
+  const prev = el.querySelector('.prev'), nextB = el.querySelector('.nextp'), readme = el.querySelector('.readme');
+  const stopHi = () => { reading++; page.querySelectorAll('.sw').forEach(w=>w.classList.remove('lit')); };
+  const text = () => pg < 0 ? st.title : st.pages[pg].t;
+  const readAloud = async () => {
+    stopHi(); const my = reading; const words = [...page.querySelectorAll('.sw')]; const tm = (await A.storyTimings())[text()];
+    let t0 = null;
+    const p = A.play('st', text(), {onstart:(t)=>{ t0 = t; }});
+    if (tm && tm.length === words.length){
+      const tick = () => { if (my !== reading) return; if (t0 !== null){ const t = A.now() - t0; words.forEach((w,i)=>w.classList.toggle('lit', t >= tm[i][0]-0.03 && t < (tm[i+1] ? tm[i+1][0]-0.03 : tm[i][1]+0.25))); }
+        if (A.audioState.playing || t0 === null) requestAnimationFrame(tick); else words.forEach(w=>w.classList.remove('lit')); };
+      requestAnimationFrame(tick);
+    }
+    await p; if (my === reading) words.forEach(w=>w.classList.remove('lit'));
+  };
+  const render = () => {
+    stopHi(); A.stop();
+    dots.forEach((d,i)=>{ d.classList.toggle('on', i<=pg); });
+    if (pg < 0){
+      page.innerHTML = `<div class="cover-page"><img class="ppic big" src="${emojiSrc(st.cover)}" alt=""><div class="sentence story-text title">${storyTokens(st.title).map(t=>`<button class="sw" data-w="${esc(t.word||'')}">${esc(t.text)}</button>`).join('')}</div>
+        <div class="muted" style="font-size:20px">${esc(st.ko)}</div><div class="cast">${pagePic('hero')}${pagePic('cubi')}</div></div>`;
+    } else {
+      const p = st.pages[pg];
+      page.innerHTML = `<div class="pics">${p.pic.map(pagePic).join('')}</div><div class="sentence story-text">${storyTokens(p.t).map(t=>`<button class="sw" data-w="${esc(t.word||'')}">${esc(t.text)}</button>`).join('')}</div><div class="pno px">${pg+1} / ${st.pages.length}</div>`;
+    }
+    page.classList.remove('turn'); void page.offsetWidth; page.classList.add('turn');
+    page.querySelectorAll('.sw').forEach(b=>b.onclick = async ()=>{ const w = b.dataset.w; if (!w) return; stopHi(); b.classList.add('lit'); await A.play('w', w); b.classList.remove('lit'); });
+    prev.disabled = pg < 0; prev.style.visibility = pg < 0 ? 'hidden' : '';
+    nextB.textContent = pg < 0 ? '읽기 시작 ▶' : pg === st.pages.length-1 ? '다 읽었어! ✔' : '다음 ▶';
+    nextB.classList.toggle('done', pg === st.pages.length-1);
+    if (pg >= 0) setTimeout(()=>{ if (A.audioState.playing) return; readAloud(); }, 450);
+  };
+  prev.onclick = ()=>{ if (pg > -1){ pg--; A.sfx('tap'); render(); } };
+  readme.onclick = ()=>{ A.unlock(); readAloud(); };
+  nextB.onclick = ()=>{ A.unlock(); A.sfx('tap');
+    if (pg < st.pages.length-1){ pg++; render(); return; }
+    stopHi(); A.stop(); const first = store.storyRead(st.id); if (first){ const up = store.addXP(15); A.sfx('level'); } else A.sfx('ok');
+    const bg = h(`<div class="sheet-bg"><div class="sheet" style="text-align:center"><div style="font-size:70px">📜✨</div><h3 class="en" style="margin:6px 0">${esc(st.title)}</h3>
+      <p style="font-size:20px;margin:6px 0">${first ? '끝까지 다 읽었어! 책장에 꽂아 둘게. <b>+15 XP</b>' : '또 읽었구나! 읽을수록 술술 읽혀요.'}</p>
+      <div style="display:flex;gap:12px;justify-content:center;margin-top:10px"><button class="btn ghost small again">다시 읽기</button><button class="btn hero small shelfb">📚 책장으로</button></div></div></div>`);
+    document.body.append(bg); A.play('ko','story_done');
+    bg.querySelector('.again').onclick = ()=>{ bg.remove(); pg = -1; render(); };
+    bg.querySelector('.shelfb').onclick = ()=>{ bg.remove(); go('library'); };
+  };
+  render(); setTimeout(()=>A.play('ko','story_start'), 250);
+}
+
+// ---------------- 학교 영어 corner ----------------
+function talkCorner(){
+  const st = S(); const ts = talkState();
+  const el = screen('', `<div class="topbar">${backBtn()}<h2 style="margin:0;font-size:26px">🗣️ 학교 영어</h2><div class="spacer"></div><span class="chip px">${ts.done}/${TALK.length}</span></div>
+    <div class="scroll"><div style="max-width:980px;margin:0 auto;display:flex;flex-direction:column;gap:16px">
+      <div class="card" style="display:flex;gap:14px;align-items:center">${block('power',{size:60,face:true})}<div style="font-size:18px;line-height:1.5">
+        학교 3학년 영어 시간에 나오는 표현을 큐비랑 연습해요! 한 번에 3분.<br><span class="muted" style="font-size:15px">새 대화는 하루에 하나, 또는 파닉스 미션을 1개 할 때마다 열려요. 짝수 레슨을 처음 깨면 💿 말하기 디스크!</span></div></div>
+      ${ts.waiting ? `<div class="card wait-note">⏳ 다음 대화는 <b>파닉스 미션 1개</b>를 하거나 <b>내일</b> 열려요. 그동안 끝낸 대화를 복습해도 좋아요!</div>` : ''}
+      <div class="lessons">${TALK.map((L,i)=>{ const done = st.talk[L.id]?.n; const open = talkOpen(i);
+        return `<button class="lesson ${done?'done':''} ${open?'':'locked'} ${open&&!done?'now':''}" data-i="${i}"><span class="ln px">${done?'✓':i+1}</span><span class="lsc">${open ? (L.scene.startsWith('#')?'🔢':`<img src="${emojiSrc(L.scene)}" alt="">`) : '🔒'}</span>
+          <span class="ltx"><span class="lko">${esc(L.ko)}</span><span class="len en">${open ? esc(L.lines[0][1]) : esc(L.fn)}</span></span>${i%2===1 ? `<span class="ldisc" title="디스크">💿</span>`:''}</button>`; }).join('')}</div>
+    </div></div>`);
   wireBack(el);
+  el.querySelectorAll('.lesson').forEach(b=>b.onclick=()=>{ A.unlock(); A.sfx('tap'); if (b.classList.contains('locked')){ toast(ts.waiting ? '파닉스 미션 1개 하면 열려요! (또는 내일)' : '앞 대화를 먼저 해 봐요!'); return; } startTalk(TALK[+b.dataset.i].id); });
+  const cur = el.querySelector('.lesson.now'); if (cur) setTimeout(()=>cur.scrollIntoView({block:'center', behavior:'smooth'}), 200);
+  A.play('ko','talk_home');
 }
 
 // ---------------- parent gate & dashboard ----------------
@@ -375,6 +517,14 @@ function parentDash(){
         <div class="kpi"><b>LV ${store.levelInfo().lv}</b><span>${st.xp} XP</span></div></div>
       <div class="card"><h3 class="panel-title">최근 7일</h3><div style="display:flex;gap:10px;align-items:flex-end;height:120px">${last7.map(x=>`<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px">
         <div style="width:100%;max-width:42px;height:${Math.max(4,Math.round(x.v/maxV*90))}px;background:${x.v?'var(--emerald)':'#e3e8f0'};border-radius:8px"></div><span class="muted" style="font-size:13px">${'일월화수목금토'[x.d.getDay()]}</span><span style="font-size:12px">${Math.round(x.v/60)}분</span></div>`).join('')}</div></div>
+      <div class="card"><h3 class="panel-title">함께 하는 두 트랙 · 이야기 책 & 학교 영어</h3>
+        <div class="pgrid" style="margin-bottom:10px"><div class="kpi"><b>${STORIES.filter(s=>st.stories[s.id]?.n).length}/${STORIES.length}</b><span>읽은 이야기 책 (열림 ${STORIES.filter(storyUnlocked).length})</span></div>
+          <div class="kpi"><b>${TALK.filter(t=>st.talk[t.id]?.n).length}/${TALK.length}</b><span>끝낸 학교 영어 대화</span></div></div>
+        <ul class="tips">
+          <li><b>📚 이야기 책 (디코더블 북)</b>: 단원 보스를 깨면 열리는 4–6쪽 짜리 이야기예요. 그때까지 배운 파닉스 규칙 + 몇 개의 사이트워드(a, the, is, I, to, and …)로만 쓰여 있어서 아이가 <b>혼자 소리 내어 읽을 수 있어요</b>. 단어를 누르면 그 단어만, 🔊를 누르면 문장을 읽어 주며 읽는 단어에 불이 들어와요. 처음엔 아이가 먼저 읽고, 막히면 단어를 누르게 해 주세요.</li>
+          <li><b>🗣️ 학교 영어 (초3 교과 표현)</b>: 인사, 이름, 기분, 숫자 1–20, 색깔, 교실 명령, This is / What's this?, I like / Do you like?, Can you?, Don't …, 나이, 가족, 날씨 등 18개 짧은 대화예요. 듣기 → 표현 익히기 → 듣고 고르기 → 그림 퀴즈 → 알맞은 대답 고르기 순서로 3분 정도 걸려요. <b>대화를 들은 뒤 큰 소리로 따라 말하게</b> 해 주세요.</li>
+          <li>학교 영어는 파닉스 진도와 상관없이 처음부터 열려 있고, <b>새 대화는 하루 1개 또는 파닉스 미션 1개를 할 때마다</b> 열려요. 두 트랙을 번갈아 하도록 설계했어요. (모든 단원 열기를 켜면 전부 열려요.)</li>
+        </ul></div>
       <div class="card"><h3 class="panel-title">교재 진도 (Phonics Works 1–4)</h3>
         ${[1,2,3,4].map(bk=>`<div class="book"><h4>📘 ${bk}권 · ${['알파벳 & 단모음','장모음 & 이중자음','이중글자 & 여러 모음','사이트워드 100'][bk-1]}</h4><div class="ulist">${UNITS.filter(u=>u.book===bk).map(u=>{ const m = store.mastery(unitItems(u)); const sc = store.stars(u.id);
           return `<div class="urow"><div><span class="en">${esc(u.type==='sight'? u.sight.slice(0,3).join(' ') : u.title)}</span> <span class="muted" style="font-size:12px">${u.unit}단원</span></div><div class="muted" style="font-size:12px">미션 ${sc}/3 · 숙달 ${Math.round(m*100)}%</div><div class="bar"><i style="width:${Math.round(m*100)}%"></i></div></div>`; }).join('')}</div></div>`).join('')}</div>

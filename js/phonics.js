@@ -1,4 +1,6 @@
 // Phonics engine: segments words into graphemes + phonemes for blending & building.
+import { STORIES } from './stories.js';
+import { talkAudio } from './talk.js';
 import { GRAPHEME_SOUND, UNITS, LETTERS, PRAISE, ENCOURAGE, EN_LINES, KO, SAY, SHOW, CONFUSIONS, PHONEMES } from './data.js';
 
 const VOWELS = 'aeiou';
@@ -78,6 +80,9 @@ export function tokenize(sentence){
   });
 }
 
+// story tokens: like tokenize() but hyphenated picture words map to their audio key (yo-yo -> yoyo)
+export function storyTokens(text){ return tokenize(text).map(t=>({text:t.text, word: t.word ? t.word.replace(/-/g,'') : null})); }
+
 export const unitById = id => UNITS.find(u=>u.id===id);
 
 export function unitWords(u){
@@ -95,7 +100,9 @@ export function collectAudio(){
     (u.sentences||[]).forEach(s=>{ sentences.add(s); tokenize(s).forEach(t=>t.word&&words.add(t.word)); });
   }
   for (const c of CONFUSIONS) c.words.flat().forEach(w=>words.add(w));
-  const NAMES = {sam:'Sam',phil:'Phil',fred:'Fred',ted:'Ted',bob:'Bob',i:'I',june:'June'};
+  const pages = new Set();
+  for (const st of STORIES){ pages.add(st.title); st.pages.forEach(p=>{ pages.add(p.t); storyTokens(p.t).forEach(t=>t.word&&words.add(t.word)); }); }
+  const NAMES = {sam:'Sam',phil:'Phil',fred:'Fred',ted:'Ted',bob:'Bob',i:'I',june:'June',max:'Max',cubi:'Q-bee',pam:'Pam',ben:'Ben'};
   const ws = {}; for (const w0 of words){ const w = baseWord(w0).toLowerCase(); ws[w] = NAMES[w] || sayWord(w); }
   return {
     w: ws,
@@ -104,5 +111,7 @@ export function collectAudio(){
     l: Object.fromEntries('abcdefghijklmnopqrstuvwxyz'.split('').map(c=>[c,c.toUpperCase()])),
     x: Object.fromEntries([...PRAISE,...ENCOURAGE,...EN_LINES].map(s=>[s,s])),
     ko: {...KO},
+    st: Object.fromEntries([...pages].map(s=>[s,s])),
+    tk: Object.fromEntries(talkAudio().map(s=>[s,s])),
   };
 }

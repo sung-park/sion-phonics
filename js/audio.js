@@ -19,6 +19,10 @@ export function rel(cat, key){
   return manifest[cat]?.[key] || null;
 }
 export const has = (cat,key)=>!!rel(cat,key);
+// story page word timings (generated with ElevenLabs character alignment)
+let timings = null;
+export async function storyTimings(){ if (!timings) timings = fetch('assets/audio/st/timings.json').then(r=>r.json()).catch(()=>({})); return timings; }
+export const now = () => ctx ? ctx.currentTime : performance.now()/1000;
 function load(r){
   if (!buffers.has(r)){
     // phonemes/letter names get ?v=3 to bust old browser/service-worker caches
@@ -31,7 +35,7 @@ export function preload(list){ unlock(); if(!ctx) return; list.forEach(([c,k])=>
 export function stop(){ gen++; if (currentSrc){ try{ currentSrc.stop(); }catch(e){} currentSrc=null; } audioState.playing=false; emit(); }
 
 // play one clip; resolves when finished (or immediately if missing / interrupted)
-export async function play(cat, key, {interrupt=true, rate=1}={}){
+export async function play(cat, key, {interrupt=true, rate=1, onstart=null}={}){
   unlock(); if (!ctx) return;
   if (cat==='ko' && !settings.ko) return;
   const r = rel(cat,key); if (!r) { console.debug('[audio] missing', cat, key); return; }
@@ -43,7 +47,7 @@ export async function play(cat, key, {interrupt=true, rate=1}={}){
     const src = ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = rate;
     const g = ctx.createGain(); g.gain.value = cat==='ko' ? 0.9 : 1; src.connect(g).connect(ctx.destination);
     src.onended = ()=>{ if (currentSrc===src){ currentSrc=null; audioState.playing=false; emit(); } res(); };
-    currentSrc = src; audioState.playing = true; emit(); src.start();
+    currentSrc = src; audioState.playing = true; emit(); src.start(); if (onstart) onstart(ctx.currentTime, ctx);
   });
 }
 // play a sequence; aborts if something else interrupts

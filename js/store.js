@@ -5,6 +5,7 @@ export const dateKey = today;
 const fresh = () => ({
   v:1, name:'', color:'red', created:Date.now(), xp:0, streak:{count:0,last:null},
   units:{}, items:{}, conf:{}, inv:{}, suit:[], trainer:{}, sessions:[], days:{}, missionCount:0,
+  stories:{}, talk:{}, talkGate:null,   // added in v1.3 (story scrolls, 학교 영어); defaults keep old saves valid
   settings:{calm:false, ko:true, sfx:true, len:'normal', unlockAll:false, start:'b1u1'},
 });
 let S = load();
@@ -12,7 +13,7 @@ function load(){ try { const s = JSON.parse(localStorage.getItem(KEY)); if (s &&
 export function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e){} }
 export const state = () => S;
 export function reset(){ S = fresh(); save(); }
-export function importData(obj){ if (obj && obj.v===1){ S = {...fresh(), ...obj}; save(); return true; } return false; }
+export function importData(obj){ if (obj && obj.v===1){ S = {...fresh(), ...obj, settings:{...fresh().settings, ...(obj.settings||{})}}; save(); return true; } return false; }
 
 // ---- XP / level ----
 export function levelInfo(xp=S.xp){ let lv=1, need=100, rest=xp; while (rest >= need){ rest-=need; lv++; need = 100 + (lv-1)*40; } return {lv, cur:rest, need}; }
@@ -62,4 +63,8 @@ export function addBlock(type){ S.inv[type] = (S.inv[type]||0)+1; save(); }
 export function addSuit(part){ if (!S.suit.includes(part)){ S.suit.push(part); save(); return true; } return false; }
 export function logSession(entry){ S.sessions.unshift({d:Date.now(), ...entry}); S.sessions = S.sessions.slice(0,120); save(); }
 export function set(k, v){ S[k] = v; save(); }
+// ---- story scrolls & talk lessons ----
+export function storyRead(id){ const r = S.stories[id] || (S.stories[id] = {n:0, at:0}); const first = !r.n; r.n++; r.at = Date.now(); save(); return first; }
+export function talkDone(id, acc){ const t = S.talk[id] || (S.talk[id] = {n:0, best:0, at:0}); const first = !t.n; t.n++; t.best = Math.max(t.best, acc); t.at = Date.now();
+  if (first) S.talkGate = {mc:S.missionCount, day:today()}; save(); return first; }
 export function setSetting(k, v){ S.settings[k] = v; save(); }

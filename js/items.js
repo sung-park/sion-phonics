@@ -33,6 +33,7 @@ const tool = (shape, mat) => ({...P, M:MAT[mat][1], L:MAT[mat][0], g:'#3c4250'})
 
 export const CATS = [
   {id:'block', name:'블록 · 광석', emoji:'🧱'}, {id:'tool', name:'도구', emoji:'⛏️'}, {id:'gear', name:'모험 장비', emoji:'🎒'}, {id:'pet', name:'펫 친구', emoji:'🐾'},
+  {id:'disc', name:'말하기 디스크', emoji:'💿'},
 ];
 export const ITEMS = {};
 for (const [k,b] of Object.entries(BLOCKS)) ITEMS[k] = {name:b.name, cat:'block', rarity:b.rarity};
@@ -48,6 +49,13 @@ Object.assign(ITEMS, {
   pet_parrot:{name:'정글 앵무새', cat:'pet', rarity:5}, pet_otter:{name:'바다 수달', cat:'pet', rarity:5}, pet_golem:{name:'고대 골렘', cat:'pet', rarity:5},
   pet_fox:{name:'불꽃 여우', cat:'pet', rarity:5}, pet_dragon:{name:'차원 아기 드래곤', cat:'pet', rarity:5},
 });
+// 학교 영어 track: one speaking disc for every 2nd lesson cleared (t02, t04, ... t18), rarer as lessons go on
+const DISC = ['.....kkkk.....','...kkkkkkkk...','..kkkkkkkkkk..','.kkkkkkkkkkkk.','.kkkkLLLLkkkk.','kkkkLLLLLLkkkk','kkkkLLwwLLkkkk',
+  'kkkkLLwwLLkkkk','kkkkLLLLLLkkkk','.kkkkLLLLkkkk.','.kkkkkkkkkkkk.','..kkkkkkkkkk..','...kkkkkkkk...','.....kkkk.....'];
+export const DISCS = [['disc_meadow','초원 디스크','#5fd35f',2],['disc_cave','동굴 디스크','#9aa3b2',2],['disc_mine','광산 디스크','#c8803c',3],
+  ['disc_jungle','정글 디스크','#2fbf71',3],['disc_ocean','바다 디스크','#2f9bff',3],['disc_ancient','고대 디스크','#1fc7c7',4],
+  ['disc_lava','용암 디스크','#ff5a1f',4],['disc_end','차원 디스크','#a855f7',5],['disc_gold','황금 디스크','#ffd84a',5]];
+DISCS.forEach(([id,name,col,rar])=>{ ITEMS[id] = {name, cat:'disc', rarity:rar, rows:DISC, pal:{...P, k:'#22252f', L:col}}; });
 for (const [k,it] of Object.entries(ITEMS)) if (ART[k]) { it.rows = ART[k]; it.pal = P; }
 ITEMS.pet_otter.pal = {...P, s:'#a8764a'};                       // brown sea otter
 ITEMS.pet_dragon.pal = {...P, b:'#9b5cf6', B:'#5b2bb5', y:'#e9d5ff'}; // purple end-dragon
