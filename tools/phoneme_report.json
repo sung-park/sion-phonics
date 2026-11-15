@@ -1,0 +1,227 @@
+{
+ "b": {
+  "carrier": "bat",
+  "mode": "onset_voiced",
+  "dur": 0.06
+ },
+ "d": {
+  "carrier": "dog",
+  "mode": "onset_voiced",
+  "dur": 0.07
+ },
+ "g": {
+  "carrier": "got",
+  "mode": "onset_voiced",
+  "dur": 0.145
+ },
+ "j": {
+  "carrier": "jet",
+  "mode": "onset_voiced",
+  "dur": 0.14
+ },
+ "p": {
+  "carrier": "pin",
+  "mode": "onset_voiceless",
+  "dur": 0.052
+ },
+ "t": {
+  "carrier": "top",
+  "mode": "onset_voiceless",
+  "dur": 0.097
+ },
+ "c": {
+  "carrier": "cat",
+  "mode": "onset_voiceless",
+  "dur": 0.107
+ },
+ "k": {
+  "carrier": "kit",
+  "mode": "onset_voiceless",
+  "dur": 0.107
+ },
+ "ch": {
+  "carrier": "chip",
+  "mode": "onset_voiceless",
+  "dur": 0.142
+ },
+ "h": {
+  "carrier": "hat",
+  "mode": "onset_voiceless",
+  "dur": 0.092
+ },
+ "kw": {
+  "carrier": "quick",
+  "mode": "onset_kw",
+  "dur": 0.11
+ },
+ "s": {
+  "carrier": "sun",
+  "mode": "onset_fric",
+  "dur": 0.386
+ },
+ "z": {
+  "carrier": "zoo",
+  "mode": "onset_fric",
+  "dur": 0.329
+ },
+ "f": {
+  "carrier": "fan",
+  "mode": "onset_fric",
+  "dur": 0.243
+ },
+ "v": {
+  "carrier": "van",
+  "mode": "onset_fric",
+  "dur": 0.229
+ },
+ "sh": {
+  "carrier": "ship",
+  "mode": "onset_fric",
+  "dur": 0.429
+ },
+ "th": {
+  "carrier": "thin",
+  "mode": "onset_fric",
+  "dur": 0.314
+ },
+ "dh": {
+  "carrier": "this",
+  "mode": "onset_fric",
+  "dur": 0.186
+ },
+ "ks": {
+  "carrier": "box",
+  "mode": "coda",
+  "dur": 0.235
+ },
+ "m": {
+  "carrier": "hum",
+  "mode": "coda",
+  "dur": 0.338
+ },
+ "n": {
+  "carrier": "sun",
+  "mode": "coda",
+  "dur": 0.5
+ },
+ "l": {
+  "carrier": "bell",
+  "mode": "coda",
+  "dur": 0.5
+ },
+ "ng": {
+  "carrier": "sing",
+  "mode": "coda",
+  "dur": 0.5
+ },
+ "nk": {
+  "carrier": "sink",
+  "mode": "coda",
+  "dur": 0.286
+ },
+ "r": {
+  "carrier": "red",
+  "mode": "onset_glide",
+  "dur": 0.255
+ },
+ "w": {
+  "carrier": "wet",
+  "mode": "onset_glide",
+  "dur": 0.185
+ },
+ "y": {
+  "carrier": "yes",
+  "mode": "onset_glide",
+  "dur": 0.182
+ },
+ "a": {
+  "carrier": "at",
+  "mode": "vowel",
+  "dur": 0.275
+ },
+ "e": {
+  "carrier": "egg",
+  "mode": "vowel",
+  "dur": 0.32
+ },
+ "i": {
+  "carrier": "it",
+  "mode": "vowel",
+  "dur": 0.208
+ },
+ "o": {
+  "carrier": "ox",
+  "mode": "vowel",
+  "dur": 0.208
+ },
+ "u": {
+  "carrier": "up",
+  "mode": "vowel",
+  "dur": 0.3
+ },
+ "ow": {
+  "carrier": "out",
+  "mode": "vowel",
+  "dur": 0.32
+ },
+ "oo": {
+  "carrier": "zoo",
+  "mode": "coda",
+  "dur": 0.32
+ },
+ "uu": {
+  "carrier": "book",
+  "mode": "mid",
+  "dur": 0.154
+ },
+ "oi": {
+  "carrier": "boy",
+  "mode": "coda",
+  "dur": 0.32
+ },
+ "aw": {
+  "carrier": "saw",
+  "mode": "coda",
+  "dur": 0.362
+ },
+ "ar": {
+  "carrier": "are",
+  "mode": "whole",
+  "dur": 0.325
+ },
+ "or": {
+  "carrier": "or",
+  "mode": "whole",
+  "dur": 0.345
+ },
+ "er": {
+  "carrier": "her",
+  "mode": "coda",
+  "dur": 0.32
+ },
+ "A": {
+  "carrier": "letter name A",
+  "mode": "letter",
+  "dur": null
+ },
+ "E": {
+  "carrier": "letter name E",
+  "mode": "letter",
+  "dur": null
+ },
+ "I": {
+  "carrier": "letter name I",
+  "mode": "letter",
+  "dur": null
+ },
+ "O": {
+  "carrier": "letter name O",
+  "mode": "letter",
+  "dur": null
+ },
+ "U": {
+  "carrier": "letter name U",
+  "mode": "letter",
+  "dur": null
+ }
+}
