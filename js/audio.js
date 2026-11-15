@@ -9,10 +9,35 @@ export async function initAudio(){
   try { manifest = await fetch('assets/audio/manifest.json', {cache:'no-cache'}).then(r=>r.json()); } catch(e){ manifest = {}; }
 }
 export function configure(s){ settings = {...settings, ...s}; }
+// ---- iOS silent switch ----
+// Every sound in the app (missions, story reader, 학교 영어, effects) goes through ONE Web Audio context.
+// On iOS, Web Audio is treated as "ambient" audio unless the page's audio session is "playback", and ambient
+// audio is muted by the ring/silent switch. So: ask for a playback session (Safari 16.4+ audioSession API) and,
+// on older iOS without that API, keep a silent looping <audio> element running after the first tap, which puts
+// the page in the playback category. The context itself is created/resumed inside real user gestures.
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+let primed = false, silentEl = null;
+function playbackSession(){ try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch(e){} }
+playbackSession();
 export function unlock(){
+  playbackSession();
   if (!ctx){ const AC = window.AudioContext || window.webkitAudioContext; if (AC) ctx = new AC(); }
-  if (ctx && ctx.state === 'suspended') ctx.resume();
+  if (ctx && ctx.state !== 'running' && ctx.state !== 'closed') { const r = ctx.resume(); if (r && r.catch) r.catch(()=>{}); }   // 'suspended' or iOS 'interrupted'
 }
+function prime(){
+  unlock(); if (!ctx || primed) return; primed = true;
+  try { const b = ctx.createBuffer(1, 1, 22050); const s = ctx.createBufferSource(); s.buffer = b; s.connect(ctx.destination); s.start(0); } catch(e){}
+  if (IOS && !('audioSession' in navigator)){
+    silentEl = new Audio('assets/audio/silence.mp3'); silentEl.loop = true; silentEl.setAttribute('playsinline', ''); silentEl.preload = 'auto';
+    const p = silentEl.play(); if (p && p.catch) p.catch(()=>{ primed = false; });
+  }
+}
+/** call once at boot: prime audio on the first real tap/click/key, and resume after the app returns from background */
+export function initGestures(){
+  ['pointerdown','touchend','click','keydown'].forEach(ev => document.addEventListener(ev, prime, {capture:true, passive:true}));
+  document.addEventListener('visibilitychange', () => { if (document.hidden) return; if (ctx && primed) unlock(); if (silentEl && silentEl.paused && primed) silentEl.play().catch(()=>{}); });
+}
+export const audioDebug = () => ({ctx: ctx ? ctx.state : null, primed, session: navigator.audioSession ? navigator.audioSession.type : null, silentEl: !!silentEl});
 export function rel(cat, key){
   if (!manifest) return null;
   if (cat==='w'){ const k = baseWord(String(key)).toLowerCase(); return manifest.w?.[k] || null; }

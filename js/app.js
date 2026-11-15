@@ -26,7 +26,7 @@ async function boot(){
   initFit();
   migrateRewards(); applySettings(); scenery();
   await A.initAudio();
-  document.addEventListener('pointerdown', A.unlock, {once:false, passive:true});
+  A.initGestures();
   window.addEventListener('hashchange', route);
   route();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(()=>{});
