@@ -6,7 +6,7 @@ export const audioState = { playing:false, listeners:new Set() };
 function emit(){ audioState.listeners.forEach(f=>f(audioState.playing)); }
 
 export async function initAudio(){
-  try { manifest = await fetch('assets/audio/manifest.json').then(r=>r.json()); } catch(e){ manifest = {}; }
+  try { manifest = await fetch('assets/audio/manifest.json', {cache:'no-cache'}).then(r=>r.json()); } catch(e){ manifest = {}; }
 }
 export function configure(s){ settings = {...settings, ...s}; }
 export function unlock(){
@@ -21,7 +21,8 @@ export function rel(cat, key){
 export const has = (cat,key)=>!!rel(cat,key);
 function load(r){
   if (!buffers.has(r)){
-    buffers.set(r, fetch('assets/audio/'+r).then(x=>{ if(!x.ok) throw new Error(r); return x.arrayBuffer(); })
+    // v2 phonemes/letter names get ?v=2 to bust old browser/service-worker caches
+    buffers.set(r, fetch('assets/audio/'+r+(/^(p|l)\//.test(r) ? '?v=2' : '')).then(x=>{ if(!x.ok) throw new Error(r); return x.arrayBuffer(); })
       .then(b=>new Promise((res,rej)=>ctx.decodeAudioData(b,res,rej))).catch(e=>{ buffers.delete(r); throw e; }));
   }
   return buffers.get(r);
@@ -80,6 +81,8 @@ export function sfx(name){
     case 'chest': [523,659,784,1047,1319].forEach((f,i)=>tone(f,i*.08,.3,'triangle',.07)); break;
     case 'magic': [880,1175,1397,1760,2093].forEach((f,i)=>tone(f,i*.05,.25,'sine',.06)); break;
     case 'level': [392,523,659,784,1047].forEach((f,i)=>tone(f,i*.1,.35,'square',.045)); break;
+    case 'knock': tone(150,0,.07,'square',.05,.7); tone(120,.09,.07,'square',.04,.7); break;   // chest wobble
+    case 'rare': [523,659,784,1047].forEach((f,i)=>tone(f,i*.09,.28,'square',.045)); [1568,2093,2637,3136].forEach((f,i)=>tone(f,.4+i*.06,.3,'sine',.05)); break;
     case 'whoosh': tone(200,0,.25,'sawtooth',.03,4); break;
   }
 }

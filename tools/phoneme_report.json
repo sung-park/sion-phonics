@@ -1,227 +1,182 @@
 {
- "b": {
-  "carrier": "bat",
-  "mode": "onset_voiced",
-  "dur": 0.06
+ "m": {
+  "source": "dedicated \"Mmmmmm.\" (eleven_multilingual_v2)",
+  "dur": 0.744
  },
- "d": {
-  "carrier": "dog",
-  "mode": "onset_voiced",
-  "dur": 0.07
- },
- "g": {
-  "carrier": "got",
-  "mode": "onset_voiced",
-  "dur": 0.145
- },
- "j": {
-  "carrier": "jet",
-  "mode": "onset_voiced",
-  "dur": 0.14
- },
- "p": {
-  "carrier": "pin",
-  "mode": "onset_voiceless",
-  "dur": 0.052
- },
- "t": {
-  "carrier": "top",
-  "mode": "onset_voiceless",
-  "dur": 0.097
- },
- "c": {
-  "carrier": "cat",
-  "mode": "onset_voiceless",
-  "dur": 0.107
- },
- "k": {
-  "carrier": "kit",
-  "mode": "onset_voiceless",
-  "dur": 0.107
- },
- "ch": {
-  "carrier": "chip",
-  "mode": "onset_voiceless",
-  "dur": 0.142
- },
- "h": {
-  "carrier": "hat",
-  "mode": "onset_voiceless",
-  "dur": 0.092
- },
- "kw": {
-  "carrier": "quick",
-  "mode": "onset_kw",
-  "dur": 0.11
+ "n": {
+  "source": "dedicated \"Nnnnnn.\" (eleven_multilingual_v2)",
+  "dur": 0.693
  },
  "s": {
-  "carrier": "sun",
-  "mode": "onset_fric",
-  "dur": 0.386
+  "source": "dedicated \"Ssssss.\" (eleven_multilingual_v2)",
+  "dur": 0.678
  },
- "z": {
-  "carrier": "zoo",
-  "mode": "onset_fric",
-  "dur": 0.329
+ "sh": {
+  "source": "dedicated \"Shhhhh.\" (eleven_multilingual_v2)",
+  "dur": 0.665
  },
  "f": {
-  "carrier": "fan",
-  "mode": "onset_fric",
+  "source": "dedicated \"fffff\" (eleven_multilingual_v2)",
+  "dur": 0.629
+ },
+ "th": {
+  "source": "dedicated \"thhhh\" (eleven_v3)",
+  "dur": 0.65
+ },
+ "z": {
+  "source": "dedicated \"Zzz.\" (eleven_multilingual_v2)",
+  "dur": 0.522
+ },
+ "h": {
+  "source": "dedicated \"hhhhh\" (eleven_multilingual_v2)",
+  "dur": 0.267
+ },
+ "b": {
+  "source": "carrier \"bug\" (stop_v)",
+  "dur": 0.11
+ },
+ "d": {
+  "source": "carrier \"duck\" (stop_v)",
+  "dur": 0.12
+ },
+ "g": {
+  "source": "carrier \"gum\" (stop_v)",
+  "dur": 0.125
+ },
+ "j": {
+  "source": "carrier \"jug\" (stop_v)",
+  "dur": 0.195
+ },
+ "p": {
+  "source": "carrier \"pup\" (stop)",
+  "dur": 0.11
+ },
+ "t": {
+  "source": "carrier \"tub\" (stop)",
+  "dur": 0.145
+ },
+ "c": {
+  "source": "carrier \"cup\" (stop)",
+  "dur": 0.145
+ },
+ "k": {
+  "source": "carrier \"cut\" (stop)",
+  "dur": 0.14
+ },
+ "ch": {
+  "source": "carrier \"chug\" (stop)",
+  "dur": 0.15
+ },
+ "kw": {
+  "source": "carrier \"quick\" (stop_kw)",
+  "dur": 0.22
+ },
+ "w": {
+  "source": "carrier \"wet\" (glide)",
+  "dur": 0.165
+ },
+ "y": {
+  "source": "carrier \"yes\" (glide)",
+  "dur": 0.105
+ },
+ "r": {
+  "source": "carrier \"red\" (glide_long)",
   "dur": 0.243
  },
  "v": {
-  "carrier": "van",
-  "mode": "onset_fric",
-  "dur": 0.229
- },
- "sh": {
-  "carrier": "ship",
-  "mode": "onset_fric",
-  "dur": 0.429
- },
- "th": {
-  "carrier": "thin",
-  "mode": "onset_fric",
-  "dur": 0.314
+  "source": "carrier \"van\" (fric_v)",
+  "dur": 0.247
  },
  "dh": {
-  "carrier": "this",
-  "mode": "onset_fric",
-  "dur": 0.186
- },
- "ks": {
-  "carrier": "box",
-  "mode": "coda",
-  "dur": 0.235
- },
- "m": {
-  "carrier": "hum",
-  "mode": "coda",
-  "dur": 0.338
- },
- "n": {
-  "carrier": "sun",
-  "mode": "coda",
-  "dur": 0.5
+  "source": "carrier \"this\" (fric_v)",
+  "dur": 0.17
  },
  "l": {
-  "carrier": "bell",
-  "mode": "coda",
-  "dur": 0.5
+  "source": "carrier \"bell\" (coda)",
+  "dur": 0.59
  },
  "ng": {
-  "carrier": "sing",
-  "mode": "coda",
-  "dur": 0.5
+  "source": "carrier \"sing\" (coda)",
+  "dur": 0.564
  },
  "nk": {
-  "carrier": "sink",
-  "mode": "coda",
-  "dur": 0.286
+  "source": "carrier \"sink\" (coda_keep)",
+  "dur": 0.35
  },
- "r": {
-  "carrier": "red",
-  "mode": "onset_glide",
-  "dur": 0.255
- },
- "w": {
-  "carrier": "wet",
-  "mode": "onset_glide",
-  "dur": 0.185
- },
- "y": {
-  "carrier": "yes",
-  "mode": "onset_glide",
-  "dur": 0.182
+ "ks": {
+  "source": "carrier \"box\" (coda_keep)",
+  "dur": 0.445
  },
  "a": {
-  "carrier": "at",
-  "mode": "vowel",
-  "dur": 0.275
+  "source": "carrier \"baa\" (vowel)",
+  "dur": 0.432
  },
  "e": {
-  "carrier": "egg",
-  "mode": "vowel",
-  "dur": 0.32
+  "source": "carrier \"heh\" (vowel)",
+  "dur": 0.383
  },
  "i": {
-  "carrier": "it",
-  "mode": "vowel",
-  "dur": 0.208
+  "source": "carrier \"hiss\" (vowel)",
+  "dur": 0.299
  },
  "o": {
-  "carrier": "ox",
-  "mode": "vowel",
-  "dur": 0.208
+  "source": "carrier \"hah\" (vowel)",
+  "dur": 0.437
  },
  "u": {
-  "carrier": "up",
-  "mode": "vowel",
-  "dur": 0.3
- },
- "ow": {
-  "carrier": "out",
-  "mode": "vowel",
-  "dur": 0.32
- },
- "oo": {
-  "carrier": "zoo",
-  "mode": "coda",
-  "dur": 0.32
+  "source": "carrier \"huh\" (vowel)",
+  "dur": 0.43
  },
  "uu": {
-  "carrier": "book",
-  "mode": "mid",
-  "dur": 0.154
+  "source": "carrier \"hood\" (vowel)",
+  "dur": 0.416
+ },
+ "ow": {
+  "source": "carrier \"how\" (vowel)",
+  "dur": 0.589
+ },
+ "oo": {
+  "source": "carrier \"who\" (vowel)",
+  "dur": 0.571
  },
  "oi": {
-  "carrier": "boy",
-  "mode": "coda",
-  "dur": 0.32
+  "source": "carrier \"boy\" (vowel)",
+  "dur": 0.576
  },
  "aw": {
-  "carrier": "saw",
-  "mode": "coda",
-  "dur": 0.362
+  "source": "carrier \"saw\" (vowel)",
+  "dur": 0.532
  },
  "ar": {
-  "carrier": "are",
-  "mode": "whole",
-  "dur": 0.325
+  "source": "carrier \"are\" (vowel)",
+  "dur": 0.557
  },
  "or": {
-  "carrier": "or",
-  "mode": "whole",
-  "dur": 0.345
+  "source": "carrier \"or\" (vowel)",
+  "dur": 0.575
  },
  "er": {
-  "carrier": "her",
-  "mode": "coda",
-  "dur": 0.32
+  "source": "carrier \"her\" (vowel)",
+  "dur": 0.578
  },
  "A": {
-  "carrier": "letter name A",
-  "mode": "letter",
+  "source": "letter name",
   "dur": null
  },
  "E": {
-  "carrier": "letter name E",
-  "mode": "letter",
+  "source": "letter name",
   "dur": null
  },
  "I": {
-  "carrier": "letter name I",
-  "mode": "letter",
+  "source": "letter name",
   "dur": null
  },
  "O": {
-  "carrier": "letter name O",
-  "mode": "letter",
+  "source": "letter name",
   "dur": null
  },
  "U": {
-  "carrier": "letter name U",
-  "mode": "letter",
+  "source": "letter name",
   "dur": null
  }
 }

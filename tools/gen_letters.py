@@ -29,12 +29,16 @@ for ch in CHUNKS:
         if len(segs) == len(letters): break
         print('segment mismatch', ch, len(segs), [round(b-a,2) for a,b in segs])
     else: raise SystemExit('could not segment '+ch)
-    for l,(a,b) in zip(letters, segs):
-        a = max(0,a-0.02); b = min(len(x)/SR, b+0.03)
-        seg = (x[int(a*SR):int(b*SR)]*32767).astype(np.int16)
+    for n,(l,(a,b)) in enumerate(zip(letters, segs)):
+        # keep the natural decay: extend up to 150 ms (never into the next letter), then a soft fade-out
+        nxt = segs[n+1][0]-0.03 if n+1 < len(segs) else len(x)/SR
+        a = max(0,a-0.03); b = min(nxt, b+0.15)
+        seg = x[int(a*SR):int(b*SR)].copy(); fo=int(0.08*SR); fi=int(0.01*SR)
+        seg[:fi] *= np.linspace(0,1,fi); seg[-fo:] *= np.cos(np.linspace(0,np.pi/2,fo))**2
+        seg = (seg*32767).astype(np.int16)
         fn = f'{tmp}/{l}.wav'
         with wave.open(fn,'wb') as w: w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes(seg.tobytes())
         dst = os.path.join(OUT,'l',l+'.mp3')
         if os.path.exists(dst): os.remove(dst)
-        finish(fn, dst, norm='peak'); report[l] = round(b-a,2)
+        finish(fn, dst, pad=0.1, norm='peak'); report[l] = round(b-a,2)
 print(report); print(json.dumps(stats))

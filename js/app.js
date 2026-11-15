@@ -6,18 +6,20 @@ import { block, hero, icon, cloud, BLOCKS, SUIT_ORDER, SUIT_NAMES, HERO_COLORS }
 import { buildMission, buildTrainer, MISSION_NAMES, MISSION_DESC, unitIndex, unitItems } from './missions.js';
 import { RENDER, PROMPT_KEY, h, praise } from './activities.js';
 import { emojiSrc } from './emoji.js';
+import * as REW from './rewards.js';
+import { ITEMS, CATS, itemArt, itemName, chestArt, TOTAL, ownedCount } from './items.js';
 
 const $app = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const S = () => store.state();
 const unitOf = id => UNITS.find(u=>u.id===id);
 const worldOf = uid => WORLDS.find(w=>w.units.includes(uid));
-const BIOME_BLOCK = {grass:'grass', stone:'stone', lab:'ice', iron:'iron', sky:'cloud', base:'obsidian', lava:'lava', city:'goldblock'};
+const BIOME_BLOCK = {grass:'grass', stone:'cobble', mine:'coal', jungle:'mossy', ocean:'prism', ancient:'deep', nether:'hellrock', end:'endstone'};
 const unitLabel = u => u.type==='sight' ? `${u.book}권 ${u.unit}단원` : `${u.book}권 ${u.unit}단원`;
 
 // ---------------- boot ----------------
 async function boot(){
-  applySettings(); scenery();
+  migrateRewards(); applySettings(); scenery();
   await A.initAudio();
   document.addEventListener('pointerdown', A.unlock, {once:false, passive:true});
   window.addEventListener('hashchange', route);
@@ -67,11 +69,28 @@ function nextMission(){
   return {unit: UNITS[UNITS.length-1], idx:2};
 }
 
+// world the child has actually reached (start setting, next mission, any finished mission) - drives reward tiers
+function progressWorld(){
+  let wi = REW.worldIndex(S().settings.start || 'b1u1');
+  if (S().name) wi = Math.max(wi, REW.worldIndex(nextMission().unit.id));
+  for (const [uid, u] of Object.entries(S().units)) if (u.m && u.m.some(Boolean)) wi = Math.max(wi, REW.worldIndex(uid));
+  return wi;
+}
+// rewards v2: one-time inventory fix for saves made with the old (random-rarity) rewards. Same key & schema (v:1).
+export function migrateRewards(){
+  const st = S(); if (st.rv === 2) return;
+  const moved = Object.keys(st.inv||{}).length ? REW.migrateInventory(st, progressWorld(), k=>ITEMS[k]?.rarity||1) : {};
+  // worlds already cleared before pets existed: hand over that world's pet companion
+  WORLDS.forEach((w,i)=>{ const pet = REW.TIERS[i]?.pet; if (pet && st.suit.includes(w.suit) && !st.inv[pet]) { st.inv[pet] = 1; moved['+'+pet] = 1; } });
+  st.rv = 2; if (Object.keys(moved).length) st.invMigration = {at:Date.now(), moved};
+  store.save();
+}
+
 // ---------------- onboarding ----------------
 function onboarding(){
   let color = S().color || 'red';
   const el = screen('', `<div class="scroll" style="display:flex;padding-bottom:120px"><div class="onb">
-    <div class="logo"><div style="display:flex;gap:6px">${block('grass',{size:56})}${block('power',{size:56,face:true})}${block('gold',{size:56})}</div>
+    <div class="logo"><div style="display:flex;gap:6px">${block('grass',{size:56})}${block('power',{size:56,face:true})}${block('wood',{size:56})}</div>
       <h1>블록 히어로<br>파닉스</h1><div class="sub">BLOCK HERO PHONICS</div></div>
     <div class="card" style="width:100%;display:flex;flex-direction:column;gap:14px;align-items:center">
       <div class="hero-stage prev">${hero([], color, 130)}</div>
@@ -100,17 +119,16 @@ function startOptions(sel){
 // ---------------- home ----------------
 function home(){
   const st = S(); const lv = store.levelInfo(); const nm = nextMission(); const w = worldOf(nm.unit.id);
-  const blocks = Object.values(st.inv).reduce((a,b)=>a+b,0);
   const el = screen('', `
     <div class="topbar"><div class="chip">${icon('flame',22)} <span class="px">${st.streak.count}</span>일</div>
       <div class="chip">${icon('xp',22)} <span class="px">${st.xp}</span> XP</div><div class="spacer"></div>
       <button class="iconbtn" data-go="parent" aria-label="보호자 화면">🔒</button></div>
     <div class="scroll" style="display:flex"><div class="home">
-      <div class="card hero-card"><div class="hero-stage">${hero(st.suit, st.color, 140)}</div>
-        <div class="hero-info" style="flex:1"><div class="muted" style="font-size:16px">오늘도 출동!</div><h2>${esc(st.name)} 히어로</h2>
+      <div class="card hero-card"><button class="hero-stage edit-hero" aria-label="히어로 꾸미기">${hero(st.suit, st.color, 140)}<span class="pencil">✏️</span></button>
+        <div class="hero-info" style="flex:1"><div class="muted" style="font-size:16px">오늘도 출동!</div><h2><button class="name-btn edit-hero" aria-label="이름 바꾸기">${esc(st.name)} 히어로 <span class="pencil-s">✏️</span></button></h2>
           <div style="display:flex;justify-content:space-between;font-size:16px"><span class="px">LV ${lv.lv}</span><span class="muted px">${lv.cur}/${lv.need}</span></div>
           <div class="lvbar"><i style="width:${Math.round(lv.cur/lv.need*100)}%"></i></div>
-          <div class="muted" style="font-size:16px">🧱 블록 ${blocks}개 · 🦸 수트 ${st.suit.length}/8</div>
+          <div class="muted" style="font-size:16px">📖 도감 ${ownedCount(st.inv)}/${TOTAL} · 🦸 수트 ${st.suit.length}/8</div>
           <div class="goal"><span>오늘의 목표</span>${[0,1].map(k=>`<i class="${k<todayMissions()?'on':''}"></i>`).join('')}<span class="muted">${todayMissions()>=2?'달성! 🎉':'미션 2개'}</span></div></div></div>
       <div class="mission-cta">
         <div class="today">${block(BIOME_BLOCK[w.biome], {size:78, face:true})}<div style="flex:1;min-width:0"><p style="margin:0">${esc(w.name)} · ${unitLabel(nm.unit)}</p>
@@ -119,11 +137,28 @@ function home(){
         <div class="quick">
           <button class="qbtn" data-go="map">${block('grass',{size:54})}월드 지도</button>
           <button class="qbtn" data-go="trainer"><span class="ic">🕵️</span>글자 훈련소</button>
-          <button class="qbtn" data-go="inv">${block('diamond',{size:54})}인벤토리</button>
+          <button class="qbtn" data-go="inv">${icon('chest',54)}인벤토리</button>
         </div></div>
     </div></div>`);
   el.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>{ A.sfx('tap'); go(b.dataset.go); });
   el.querySelector('.start').onclick = ()=>{ A.unlock(); startMission(nm.unit.id, nm.idx); };
+  el.querySelectorAll('.edit-hero').forEach(b=>b.onclick=()=>{ A.sfx('tap'); editHero(home); });
+}
+// change hero name / colour any time (progress is untouched: only name & color fields change)
+function editHero(after){
+  let color = S().color;
+  const bg = h(`<div class="sheet-bg"><div class="sheet edit-sheet" style="text-align:center">
+    <div class="hero-stage prev" style="margin:0 auto">${hero(S().suit.length?S().suit:['helmet','cape'], color, 120)}</div>
+    <h3 style="margin:6px 0">히어로 꾸미기</h3>
+    <input class="input" maxlength="10" value="${esc(S().name)}" aria-label="히어로 이름" style="text-align:center">
+    <div class="colors" style="justify-content:center;margin:12px 0">${Object.entries(HERO_COLORS).map(([k,v])=>`<button data-c="${k}" class="${k===color?'sel':''}" style="background:${v}" aria-label="${k}"></button>`).join('')}</div>
+    <div style="display:flex;gap:12px;justify-content:center"><button class="btn ghost small no">취소</button><button class="btn hero small yes">저장 ✔</button></div></div></div>`);
+  document.body.append(bg);
+  bg.querySelectorAll('.colors button').forEach(b=>b.onclick=()=>{ color=b.dataset.c; bg.querySelectorAll('.colors button').forEach(x=>x.classList.toggle('sel',x===b)); bg.querySelector('.prev').innerHTML = hero(S().suit.length?S().suit:['helmet','cape'], color, 120); A.sfx('tap'); });
+  bg.querySelector('.no').onclick = ()=>bg.remove();
+  bg.onclick = e=>{ if (e.target===bg) bg.remove(); };
+  bg.querySelector('.yes').onclick = ()=>{ const nm = bg.querySelector('.input').value.trim(); if (nm) store.set('name', nm); store.set('color', color);
+    applySettings(); A.sfx('ok'); bg.remove(); toast('멋져요! 히어로가 바뀌었어요'); after && after(); };
 }
 
 function todayMissions(){ const t = store.dateKey(); return S().sessions.filter(x=>{ const d=new Date(x.d); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')===t; }).length; }
@@ -134,7 +169,7 @@ function worldMap(){
     <div class="scroll"><div class="worlds">${WORLDS.map(w=>{
       const open = isUnlocked(w.units[0]); const done = w.units.filter(store.unitDone).length;
       return `<div class="world biome-${w.biome} ${open?'':'locked'}"><header>${block(BIOME_BLOCK[w.biome],{size:52})}
-        <div style="flex:1"><h3>${esc(w.name)}</h3><div class="en">${esc(w.en)}</div></div><span class="book">Phonics Works ${w.book} · ${done}/${w.units.length}</span></header>
+        <div style="flex:1"><h3>${esc(w.name)}</h3><div class="en">${esc(w.en)} · <span class="topic">${esc(w.topic)}</span></div></div><span class="book">Phonics Works ${w.book} · ${done}/${w.units.length}</span></header>
         <div class="nodes">${w.units.map(uid=>{ const u = unitOf(uid); const lock = !isUnlocked(uid); const stc = store.stars(uid);
           return `<button class="node ${lock?'locked':''} ${uid===nm.unit.id?'current':''} ${store.unitDone(uid)?'done':''}" data-u="${uid}">
             ${lock?`<span class="badge">${icon('lock',22)}</span>`:''}<span class="t">${esc(u.type==='sight'? u.sight.slice(0,2).join(' ') : u.title)}</span><span class="u">${u.book}권 ${u.unit}단원</span>
@@ -222,9 +257,13 @@ function runMission(steps, meta){
       const w = worldOf(meta.uid);
       if (meta.idx===2 && w.units.every(store.unitDone) && store.addSuit(w.suit)) suit = w.suit;
     } else { const t = S().trainer; t[meta.conf] = (t[meta.conf]||0)+1; store.save(); }
-    const reward = pickReward(meta, acc, !!suit); store.addBlock(reward);
+    const wi = meta.uid ? REW.worldIndex(meta.uid) : progressWorld();
+    const got = REW.pickReward(meta, acc, !!suit, wi, S().inv);
+    const isNew = id => !(S().inv[id] > 0);
+    const reward = got.main, rewardNew = isNew(reward); store.addBlock(reward);
+    const bonus = got.bonus || null, bonusNew = bonus ? isNew(bonus) : false; if (bonus) store.addBlock(bonus);
     store.logSession({kind:meta.kind, unit:meta.uid||meta.conf, idx:meta.idx ?? null, title: u ? `${u.title} · ${MISSION_NAMES[meta.idx]}` : `훈련소 ${meta.conf}`, correct, total:scored, secs, xp});
-    complete({meta, acc, xp, secs, reward, lvUp, suit});
+    complete({meta, acc, xp, secs, reward, rewardNew, bonus, bonusNew, lvUp, suit});
   };
   next();
 }
@@ -234,25 +273,19 @@ function confirmQuit(onYes){
     <div style="display:flex;gap:12px;justify-content:center;margin-top:10px"><button class="btn ghost small no">계속하기</button><button class="btn hero small yes">그만하기</button></div></div></div>`);
   document.body.append(bg); bg.querySelector('.no').onclick = ()=>bg.remove(); bg.querySelector('.yes').onclick = ()=>{ bg.remove(); onYes(); };
 }
-function pickReward(meta, acc, world){
-  if (world) return 'power';
-  const byR = r => Object.keys(BLOCKS).filter(k=>BLOCKS[k].rarity===r && k!=='power');
-  let r = 1 + (meta.idx===2 ? 1 : 0) + (acc>=0.85 ? 1 : 0) + (Math.random()<0.25 ? 1 : 0);
-  if (meta.kind==='trainer') r = acc>=0.85 ? 3 : 2;
-  const w = meta.uid && worldOf(meta.uid);
-  if (r<=1 && w && Math.random()<0.6) return BIOME_BLOCK[w.biome] in BLOCKS && BLOCKS[BIOME_BLOCK[w.biome]].rarity<=2 ? BIOME_BLOCK[w.biome] : 'grass';
-  const pool = byR(Math.min(5,r)); return pool[Math.floor(Math.random()*pool.length)] || 'stone';
-}
-
 // ---------------- complete ----------------
-function complete({meta, acc, xp, secs, reward, lvUp, suit}){
+function complete({meta, acc, xp, secs, reward, rewardNew, bonus, bonusNew, lvUp, suit}){
   const stars = acc>=0.8 ? 3 : acc>=0.5 ? 2 : 1; const nm = nextMission();
   const rest = store.todaySecs() > 15*60;
   const el = screen('complete', `<div class="scroll" style="display:flex;flex-direction:column;align-items:center;gap:16px;padding-top:10px">
     <h2>미션 완료!</h2>
     <div style="display:flex;gap:6px">${[0,1,2].map(i=>`<span style="opacity:${i<stars?1:.25}">${icon('star',46)}</span>`).join('')}</div>
-    <button class="chest" aria-label="상자 열기"><div class="rays"></div><div class="box">${icon('chest',150)}</div><div class="reward">${block(reward,{size:150,glow:true})}</div></button>
-    <div class="reward-name chip hidden" style="font-size:22px">🎁 ${esc(BLOCKS[reward].name)} 획득! <span class="rar">${'<i></i>'.repeat(BLOCKS[reward].rarity)}</span></div>
+    <button class="chest r${ITEMS[reward].rarity}" aria-label="상자 열기"><div class="rays"></div><div class="flash"></div><div class="box">${chestArt(170)}</div>
+      <div class="reward">${itemArt(reward,150)}${rewardNew?'<span class="newb">NEW!</span>':''}</div><div class="sparks">${Array.from({length:14},(_,i)=>`<i style="--a:${i*360/14}deg;--d:${70+(i%3)*28}px"></i>`).join('')}</div></button>
+    <div class="tap-hint muted">상자를 눌러 열어 봐!</div>
+    <div class="reward-name chip hidden" style="font-size:22px">🎁 ${esc(itemName(reward))} 획득! <span class="rar">${'<i></i>'.repeat(ITEMS[reward].rarity)}</span></div>
+    ${bonus ? `<div class="bonus-card hidden">${itemArt(bonus,96)}<div><div style="color:var(--gold)">월드 클리어 보너스! 새 펫 친구</div><div style="font-size:26px">${esc(itemName(bonus))}${bonusNew?' <span class="newb inl">NEW!</span>':''}</div></div></div>`:''}
+    <div class="dex-line chip hidden">📖 도감 <b class="px">${ownedCount(S().inv)}/${TOTAL}</b></div>
     ${suit ? `<div class="suit-unlock">${hero(S().suit, S().color, 90)}<div><div style="color:var(--gold)">월드 클리어! 새 수트 파츠</div><div style="font-size:26px">${SUIT_NAMES[suit]} 장착!</div></div></div>`:''}
     ${lvUp ? `<div class="chip" style="font-size:22px;background:var(--gold)">⬆ 레벨 업! LV ${store.levelInfo().lv}</div>`:''}
     <div class="stats"><div class="stat"><b>+${xp}</b><span>XP</span></div><div class="stat"><b>${Math.round(acc*100)}%</b><span>정답률</span></div><div class="stat"><b>${Math.max(1,Math.round(secs/60))}분</b><span>시간</span></div></div>
@@ -262,9 +295,16 @@ function complete({meta, acc, xp, secs, reward, lvUp, suit}){
       ${meta.kind==='unit' ? `<button class="btn hero nextm">다음 미션 ▶</button>` : `<button class="btn hero again">한 번 더 ▶</button>`}
     </div></div>`);
   const chest = el.querySelector('.chest');
-  const open = () => { if (chest.classList.contains('open')) return; chest.classList.add('open'); A.sfx('chest'); el.querySelector('.reward-name').classList.remove('hidden');
-    setTimeout(()=>A.play('x','New block!'), 500); if (lvUp) setTimeout(()=>A.sfx('level'), 1400); };
-  chest.onclick = open; setTimeout(open, 1400);
+  const rare = ITEMS[reward].rarity >= 3;
+  const knock = setInterval(()=>{ if (!chest.classList.contains('open')) A.sfx('knock'); }, 1400);
+  const open = () => { if (chest.classList.contains('open')) return; clearInterval(knock); A.sfx('whoosh');
+    chest.classList.add('opening');
+    setTimeout(()=>{ chest.classList.add('open'); A.sfx(rare ? 'rare' : 'chest'); el.querySelector('.tap-hint')?.remove();
+      el.querySelector('.reward-name').classList.remove('hidden'); el.querySelector('.dex-line').classList.remove('hidden');
+      setTimeout(()=>A.play('x', ITEMS[reward].cat==='block' ? 'New block!' : 'New treasure!'), 600);
+      const bc = el.querySelector('.bonus-card'); if (bc) setTimeout(()=>{ bc.classList.remove('hidden'); A.sfx('rare'); }, 1500);
+      if (lvUp) setTimeout(()=>A.sfx('level'), bc ? 2600 : 1500); }, 350); };
+  chest.onclick = open; setTimeout(open, 2600);
   A.seq([['x','Mission complete!'], 200]);
   el.querySelector(".gohome").onclick = ()=>go("");
   const nb = el.querySelector('.nextm'); if (nb) nb.onclick = ()=>startMission(nm.unit.id, nm.idx);
@@ -293,8 +333,12 @@ function inventory(){
       <div class="card"><h3 class="panel-title">🦸 ${esc(st.name)}의 히어로 수트</h3>
         <div class="suitgrid"><div class="hero-stage" style="width:170px;height:190px">${hero(st.suit, st.color, 180)}</div>
           <div class="suitparts">${SUIT_ORDER.map((p,i)=>`<div class="part ${st.suit.includes(p)?'on':''}"><span class="dot"></span><div><div>${SUIT_NAMES[p]}</div><div class="muted" style="font-size:13px">${esc(WORLDS[i].name)} 클리어</div></div></div>`).join('')}</div></div></div>
-      <div class="card"><h3 class="panel-title">🧱 모은 블록</h3><div class="inv">${Object.entries(BLOCKS).map(([k,b])=>{ const n = st.inv[k]||0;
-        return `<div class="slotinv ${n?'':'none'}"><span class="cnt">${n?'×'+n:''}</span>${block(k,{size:64})}<span class="nm">${n?esc(b.name):'???'}</span><span class="rar">${'<i></i>'.repeat(b.rarity)}</span></div>`; }).join('')}</div></div>
+      <div class="card"><div class="dex-head"><h3 class="panel-title" style="margin:0">📖 보물 도감</h3><span class="chip px">${ownedCount(st.inv)}/${TOTAL}</span></div>
+        <div class="lvbar" style="margin:10px 0 4px"><i style="width:${Math.round(ownedCount(st.inv)/TOTAL*100)}%"></i></div>
+        <p class="muted" style="margin:4px 0 6px;font-size:15px">초원에서 출발해 동굴·광산·정글·바다 유적·고대 도시·지하세계를 지나 끝의 차원까지! 깊이 갈수록 귀한 보물이 나와요. 도구와 귀한 광석은 보스 미션에서, 펫 친구는 월드를 클리어하면 만나요!</p>
+        ${CATS.map(c=>{ const ks = Object.keys(ITEMS).filter(k=>ITEMS[k].cat===c.id).sort((x,y)=>(REW.firstWorld(x)-REW.firstWorld(y)) || (ITEMS[x].rarity-ITEMS[y].rarity)); const have = ks.filter(k=>st.inv[k]>0).length;
+          return `<div class="zone"><div class="zone-t">${c.emoji} ${c.name} <span class="muted px" style="font-size:13px">${have}/${ks.length}</span></div><div class="inv">${ks.map(k=>{ const it = ITEMS[k]; const n = st.inv[k]||0;
+          return `<div class="slotinv ${n?'':'none'} ${it.cat==='pet'?'pet':''}"><span class="cnt">${n>1?'×'+n:''}</span><span class="${n?'':'sil'}">${itemArt(k,64)}</span><span class="nm">${n?esc(it.name):'???'}</span><span class="rar">${'<i></i>'.repeat(it.rarity)}</span></div>`; }).join('')}</div></div>`; }).join('')}</div>
     </div></div>`);
   wireBack(el);
 }
@@ -339,7 +383,8 @@ function parentDash(){
       <div class="card"><h3 class="panel-title">최근 학습 기록</h3>${st.sessions.length ? `<table class="log"><tr><th>날짜</th><th>미션</th><th>정답</th><th>시간</th></tr>${st.sessions.slice(0,15).map(s=>{ const d = new Date(s.d);
         return `<tr><td>${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}</td><td class="en" style="font-weight:400">${esc(s.title)}</td><td>${s.correct}/${s.total}</td><td>${Math.max(1,Math.round(s.secs/60))}분</td></tr>`; }).join('')}</table>` : '<p class="muted">아직 기록이 없어요.</p>'}</div>
       <div class="card"><h3 class="panel-title">설정</h3>
-        <div class="setrow"><div>아이 이름</div><input class="input nm" style="max-width:200px;font-size:20px;padding:8px" value="${esc(st.name)}"></div>
+        <div class="setrow"><div>아이 이름</div><input class="input nm" maxlength="10" style="max-width:200px;font-size:20px;padding:8px" value="${esc(st.name)}"></div>
+        <div class="setrow"><div>히어로 색깔</div><div class="colors small">${Object.entries(HERO_COLORS).map(([k,v])=>`<button data-c="${k}" class="${k===st.color?'sel':''}" style="background:${v}" aria-label="${k}"></button>`).join('')}</div></div>
         <div class="setrow"><div>시작 단원<small>지금 교재에서 공부 중인 단원을 고르면 그 단원까지 열려요</small></div><select class="sel start">${startOptions(st.settings.start)}</select></div>
         ${toggleRow('unlockAll','모든 단원 열기','순서와 상관없이 자유롭게 고를 수 있어요')}
         ${toggleRow('calm','차분 모드','움직임·반짝임을 줄여요 (집중이 흐트러질 때 추천)')}
@@ -352,18 +397,19 @@ function parentDash(){
         <li><b>하루 1–2개 미션(3–5분)</b>이면 충분해요. 짧게 자주가 길게 한 번보다 효과적이에요.</li>
         <li>정답보다 <b>시도</b>를 칭찬해 주세요. 앱도 틀린 소리를 내지 않고, 두 번째엔 힌트를 줘요.</li>
         <li>블렌딩 활동에서는 아이가 <b>소리를 소리 내어 따라 말하게</b> 해 주세요 (c-a-t → cat).</li>
-        <li>b/d가 헷갈리면 <b>두 주먹 엄지 세우기(bed 트릭)</b>를 실제로 함께 해 보세요.</li>
+        <li>b/d가 헷갈리면 <b>bed 트릭</b>: 두 손 엄지척, 주먹끼리 마주 보게 → <b>왼손 = b, 오른손 = d</b>. 실제로 함께 해 보세요.</li>
         <li>교재 진도와 맞추려면 위 <b>시작 단원</b>을 지금 단원으로 설정하세요. 앱 순서는 Phonics Works 1–4와 같아요.</li></ul></div>
       <div class="foot">블록 히어로 파닉스 · 비영리 가족 학습용 · 음성: ElevenLabs로 미리 생성<br>그림: <a href="https://github.com/jdecked/twemoji" target="_blank" rel="noopener">Twemoji</a> (CC-BY 4.0) · 블록·히어로 그래픽은 직접 그린 오리지널이에요.<br>
         이 앱은 특정 게임·영화·출판사와 관계가 없어요. 커리큘럼 순서만 Phonics Works 시리즈를 참고했어요.</div>
     </div></div>`);
   wireBack(el);
   el.querySelectorAll('.toggle').forEach(t=>t.onclick=()=>{ const k = t.dataset.k; const v = !S().settings[k]; store.setSetting(k, v); t.classList.toggle('on', v); applySettings(); });
-  el.querySelector('.nm').onchange = e=>store.set('name', e.target.value.trim() || S().name);
+  el.querySelector('.nm').onchange = e=>{ store.set('name', e.target.value.trim() || S().name); toast('이름을 바꿨어요'); };
+  el.querySelectorAll('.colors.small button').forEach(b=>b.onclick=()=>{ store.set('color', b.dataset.c); applySettings(); el.querySelectorAll('.colors.small button').forEach(x=>x.classList.toggle('sel',x===b)); });
   el.querySelector('.start').onchange = e=>store.setSetting('start', e.target.value);
   el.querySelector('.len').onchange = e=>store.setSetting('len', e.target.value);
   el.querySelector('.exp').onclick = ()=>{ const blob = new Blob([JSON.stringify(S(),null,1)],{type:'application/json'}); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `block-hero-phonics-${store.dateKey()}.json`; a.click(); };
-  el.querySelector('.imp').onclick = ()=>{ const i = document.createElement('input'); i.type='file'; i.accept='application/json'; i.onchange = async ()=>{ try { const ok = store.importData(JSON.parse(await i.files[0].text())); toast(ok?'가져왔어요!':'파일을 읽을 수 없어요'); applySettings(); parentDash(); } catch(e){ toast('파일을 읽을 수 없어요'); } }; i.click(); };
+  el.querySelector('.imp').onclick = ()=>{ const i = document.createElement('input'); i.type='file'; i.accept='application/json'; i.onchange = async ()=>{ try { const ok = store.importData(JSON.parse(await i.files[0].text())); if (ok) migrateRewards(); toast(ok?'가져왔어요!':'파일을 읽을 수 없어요'); applySettings(); parentDash(); } catch(e){ toast('파일을 읽을 수 없어요'); } }; i.click(); };
   el.querySelector('.rst').onclick = ()=>{ if (confirm('모든 진도와 블록이 지워져요. 정말 초기화할까요?')){ store.reset(); applySettings(); go(''); } };
 }
 function toggleRow(k, title, sub){ return `<div class="setrow"><div>${title}<small>${sub}</small></div><button class="toggle ${S().settings[k]?'on':''}" data-k="${k}" aria-label="${title}"></button></div>`; }

@@ -237,19 +237,19 @@ export const UNITS = [
 ];
 
 export const WORLDS = [
-  {id:'w1', name:'알파벳 초원', en:'Alphabet Plains', biome:'grass', book:1, units:['b1u1','b1u2','b1u3','b1u4','b1u5','b1u6','b1u7','b1u8'], suit:'helmet'},
-  {id:'w2', name:'단모음 동굴', en:'Short-Vowel Caves', biome:'stone', book:1, units:['b1u9','b1u10','b1u11','b1u12','b1u13'], suit:'gloves'},
-  {id:'w3', name:'매직 e 연구소', en:'Magic-e Lab', biome:'lab', book:2, units:['b2u1','b2u2','b2u3','b2u4'], suit:'cape'},
-  {id:'w4', name:'블렌드 대장간', en:'Blend Forge', biome:'iron', book:2, units:['b2u5','b2u6','b2u7'], suit:'boots'},
-  {id:'w5', name:'장모음 하늘섬', en:'Sky Islands', biome:'sky', book:2, units:['b2u8','b2u9','b2u10','b2u11','b2u12','b2u13'], suit:'jetpack'},
-  {id:'w6', name:'이중자음 기지', en:'Digraph HQ', biome:'base', book:3, units:['b3u1','b3u2','b3u3','b3u4','b3u5'], suit:'shield'},
-  {id:'w7', name:'파워 모음 요새', en:'Power-Vowel Fortress', biome:'lava', book:3, units:['b3u6','b3u7','b3u8','b3u9','b3u10','b3u11','b3u12'], suit:'core'},
-  {id:'w8', name:'사이트워드 시티', en:'Sight-Word City', biome:'city', book:4, units:Array.from({length:20},(_,i)=>'b4u'+(i+1)), suit:'belt'},
+  {id:'w1', name:'시작의 초원', en:'Starting Meadow', topic:'알파벳', biome:'grass', book:1, units:['b1u1','b1u2','b1u3','b1u4','b1u5','b1u6','b1u7','b1u8'], suit:'helmet'},
+  {id:'w2', name:'얕은 동굴', en:'Shallow Caves', topic:'단모음', biome:'stone', book:1, units:['b1u9','b1u10','b1u11','b1u12','b1u13'], suit:'gloves'},
+  {id:'w3', name:'깊은 광산', en:'Deep Mine', topic:'매직 e', biome:'mine', book:2, units:['b2u1','b2u2','b2u3','b2u4'], suit:'cape'},
+  {id:'w4', name:'정글 신전', en:'Jungle Temple', topic:'자음 블렌드', biome:'jungle', book:2, units:['b2u5','b2u6','b2u7'], suit:'boots'},
+  {id:'w5', name:'바다 유적', en:'Ocean Ruins', topic:'장모음 팀', biome:'ocean', book:2, units:['b2u8','b2u9','b2u10','b2u11','b2u12','b2u13'], suit:'jetpack'},
+  {id:'w6', name:'고대 도시', en:'Ancient Deep City', topic:'이중자음', biome:'ancient', book:3, units:['b3u1','b3u2','b3u3','b3u4','b3u5'], suit:'shield'},
+  {id:'w7', name:'불타는 지하세계', en:'Burning Underworld', topic:'파워 모음', biome:'nether', book:3, units:['b3u6','b3u7','b3u8','b3u9','b3u10','b3u11','b3u12'], suit:'core'},
+  {id:'w8', name:'끝의 차원', en:'The Final Dimension', topic:'사이트워드', biome:'end', book:4, units:Array.from({length:20},(_,i)=>'b4u'+(i+1)), suit:'belt'},
 ];
 
 // Letter-confusion trainer
 export const CONFUSIONS = [
-  {id:'bd', letters:['b','d'], title:'b ↔ d', tip:'bed 트릭: 두 주먹 엄지를 세우면 왼손이 b, 오른손이 d! 침대(bed) 모양이 돼요.',
+  {id:'bd', letters:['b','d'], title:'b ↔ d', tip:'bed 트릭: 두 주먹으로 엄지척! 주먹끼리 마주 보게 하면 왼손은 b(막대 → 동그라미), 오른손은 d(동그라미 → 막대). 왼쪽부터 읽으면 b-e-d, 침대 모양이에요!',
     rules:{b:'b는 막대 먼저, 그다음 배(볼록)가 오른쪽!', d:'d는 동그라미 먼저, 그다음 막대가 오른쪽!'},
     words:[['bad','dad'],['big','dig'],['bug','dug'],['bed','bed'],['bat','bat']]},
   {id:'pq', letters:['p','q'], title:'p ↔ q', tip:'p는 동그라미가 오른쪽, q는 동그라미가 왼쪽. q 옆에는 항상 u 친구가 따라와요 (qu)!',
@@ -271,7 +271,7 @@ export const CONFUSIONS = [
 
 export const PRAISE = ['Great job!','You did it!','Awesome!','Super!','Nice work!','Way to go, hero!','You got it!','Amazing!','Power up!','Fantastic!'];
 export const ENCOURAGE = ['Almost! Try again.','Listen again.','Good try!'];
-export const EN_LINES = ['Mission complete!','Level up!','New block!','Let\u2019s go, hero!','Magic e!'];
+export const EN_LINES = ['Mission complete!','Level up!','New block!','New treasure!','Let\u2019s go, hero!','Magic e!'];
 
 // Korean voice prompts (key → text)
 export const KO = {

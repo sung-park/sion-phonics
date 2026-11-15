@@ -334,12 +334,24 @@ R.sight_intro = (s, ctx) => {
   ctx.replay = say; ctx.say('sight').then(say);
 };
 
+// Original SVG thumbs-up fist. LEFT hand: thumb (stick) on the left, fist (bowl) to the right = b.
+// RIGHT hand is the mirror: fist on the left, thumb on the right = d.  b + d side by side = "bed".
+const fist = (letter, label) => {
+  const flip = letter==='d' ? ' transform="translate(100 0) scale(-1 1)"' : '';
+  return `<figure class="fist"><svg viewBox="0 0 100 124" width="100" height="124" aria-hidden="true"><g${flip}>
+    <rect x="12" y="4" width="24" height="70" rx="12" fill="#f6c99b" stroke="#7a4a2a" stroke-width="4"/>
+    <rect x="12" y="52" width="76" height="66" rx="28" fill="#f6c99b" stroke="#7a4a2a" stroke-width="4"/>
+    <path d="M36 58 Q30 70 36 80" fill="none" stroke="#7a4a2a" stroke-width="3" stroke-linecap="round"/>
+    <path d="M62 66 H86 M62 82 H88 M62 98 H86" stroke="#c9895c" stroke-width="3.5" stroke-linecap="round"/>
+    <rect x="17" y="10" width="8" height="18" rx="4" fill="#fff" opacity=".45"/></g></svg>
+    <figcaption><b>${letter}</b><small>${label}</small></figcaption></figure>`;
+};
 // ---------- letter confusion mnemonic ----------
 R.mnemonic = (s, ctx) => {
   const c = CONFUSIONS.find(x=>x.id===s.conf);
   let visual = '';
   if (c.id==='bd' || c.id==='bdpq') visual = `<div class="bed"><span class="b">b</span>e<span class="d">d</span></div>
-    <div class="hands"><figure><img class="flip" src="${emojiSrc('👍')}" alt=""><figcaption>b</figcaption></figure><figure><img src="${emojiSrc('👍')}" alt=""><figcaption>d</figcaption></figure></div>`;
+    <div class="hands">${fist('b','왼손')}<span class="hand-e">e</span>${fist('d','오른손')}</div>`;
   const node = h(`<div class="mnemo">${visual}
     <div class="bubble" style="flex:none">${esc(c.tip)}</div>
     <div style="display:flex;flex-direction:column;gap:10px;width:100%">${c.letters.map(l=>`<button class="rule" data-l="${l}"><span class="en">${l}</span><span>${esc(c.rules[l])}</span><span style="margin-left:auto">🔊</span></button>`).join('')}</div>
