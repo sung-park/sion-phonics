@@ -53,7 +53,7 @@ export const STORIES = [
     {t:'Look! A pig is in the pit.', pic:['🐷','🕳️']},
     {t:'The pig can not get out.', pic:['🐷','😢']},
     {t:'Max and Cubi help the pig.', pic:['hero','cubi']},
-    {t:'The pig did a big hop. Thank you!', pic:['🐷','⬆️']},
+    {t:'Hop! The pig is out. Thank you, Max!', pic:['🐷','❤️']},
   ]},
   {id:'st_u', unlock:'b1u13', world:'w2', title:'Bug Fun', ko:'벌레의 즐거운 하루', cover:'🐛', pages:[
     {t:'A bug is in the sun.', pic:['🐛','☀️']},
@@ -66,17 +66,17 @@ export const STORIES = [
   // ---------- w3 Deep Mine (magic e: one story per unit) ----------
   {id:'st_ae', unlock:'b2u1', world:'w3', title:'The Cave Game', ko:'동굴 게임', cover:'🦸', pages:[
     {t:'Max has a red cape.', pic:['hero','🦸']},
-    {t:'Max and Cubi go into a cave.', pic:['cubi','🕳️']},
-    {t:'They see a big gate.', pic:['🚧']},
-    {t:'"What is this game?" said Max.', pic:['hero','🎮']},
-    {t:'Max and Cubi wave at the gate. It can open!', pic:['👋','🚧']},
-    {t:'In the cave is a big cake. Yum!', pic:['🎂','😋']},
+    {t:'Max and Cubi go into a cave.', pic:['hero','cubi','⛰️']},
+    {t:'They see a big gate.', pic:['🚪']},
+    {t:'Cubi said, "It is a game. Wave at the gate!"', pic:['cubi','🎮']},
+    {t:'Max and Cubi wave. The gate opens!', pic:['👋','🚪']},
+    {t:'There is a big cake in the cave. Yum!', pic:['🎂','😋']},
   ]},
   {id:'st_ie', unlock:'b2u2', world:'w3', title:'Five Kites', ko:'연 다섯 개', cover:'🪁', pages:[
     {t:'Max can ride a bike.', pic:['hero','🚲']},
     {t:'Cubi has five kites.', pic:['cubi','🪁']},
     {t:'The kites go up, up, up!', pic:['🪁','⬆️']},
-    {t:'A kite is in the pine.', pic:['🪁','🌲']},
+    {t:'Oh no! A kite is in the pine tree.', pic:['🪁','🌲']},
     {t:'Max can hike up the pine tree.', pic:['🥾','🌲']},
     {t:'Max got the kite. Five kites! Yes!', pic:['🪁','🎉']},
   ]},
@@ -117,10 +117,10 @@ export const STORIES = [
   // ---------- w6 Ancient Deep City (digraphs) ----------
   {id:'st_digraph', unlock:'b3u5', world:'w6', title:'The Deep Chest', ko:'깊은 곳의 보물 상자', cover:'🧰', pages:[
     {t:'Max and Cubi dig a deep shaft.', pic:['hero','⛏️']},
-    {t:'Shh! A big chest is at the end.', pic:['🤫','🧰']},
+    {t:'Shh! There is a big chest at the end.', pic:['🤫','🧰']},
     {t:'Max picks the lock with a stick.', pic:['🔒','🪵']},
     {t:'Thump! The chest pops up.', pic:['🧰','💥']},
-    {t:'In the chest: a ring, a shell, and a fish!', pic:['💍','🐚','🐟']},
+    {t:'The chest has a ring, a shell, and a fish!', pic:['💍','🐚','🐟']},
     {t:'Then Max sings and Cubi winks. What a fun trip!', pic:['🎤','😉']},
   ]},
   // ---------- w7 Burning Underworld (other vowels, r-controlled) ----------
