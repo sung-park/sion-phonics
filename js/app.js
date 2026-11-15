@@ -8,6 +8,7 @@ import { RENDER, PROMPT_KEY, h, praise } from './activities.js';
 import { emojiSrc } from './emoji.js';
 import * as REW from './rewards.js';
 import { ITEMS, CATS, itemArt, itemName, chestArt, TOTAL, ownedCount } from './items.js';
+import { initFit } from './fit.js';
 
 const $app = document.getElementById('app');
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -19,6 +20,7 @@ const unitLabel = u => u.type==='sight' ? `${u.book}권 ${u.unit}단원` : `${u.
 
 // ---------------- boot ----------------
 async function boot(){
+  initFit();
   migrateRewards(); applySettings(); scenery();
   await A.initAudio();
   document.addEventListener('pointerdown', A.unlock, {once:false, passive:true});
