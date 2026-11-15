@@ -4,7 +4,11 @@
 // pic: emoji shown on the page ('cubi' = mascot block, 'hero' = the child's hero sprite)
 
 // High-frequency "heart words" a story may use from the short-vowel world on (taught as whole words).
-export const STORY_SIGHT = ['a','the','i','is','to','and','of','you','he','she','we','was','said','go','no','so','my','do','are','his','has','as'];
+// Parent-approved: a handful of very basic, very common words may appear before their phonics unit so the
+// sentences sound natural (Dolch / Fry first-100 words only, never arbitrary vocabulary).
+export const STORY_SIGHT = ['a','the','i','is','to','and','of','you','he','she','we','was','said','go','no','so','my','do','are','his','has','as',
+  'look','see','they','what','this','that','with','help','out','into','thank','good','over','open','where','here','there','come','have','for',
+  'one','two','little','all','be','me','by','put','your','oh','in','on','it','at','an','not','can','up'];
 // Character names (always allowed). Cubi = 큐비, Max = generic block hero.
 export const STORY_NAMES = ['max','cubi','bob','ted','june','sam','pam','ben'];
 
@@ -23,9 +27,9 @@ export const STORIES = [
     {t:'Max has a map and a cap.', pic:['hero','🗺️','🧢']},
     {t:'A fat cat ran at Max.', pic:['🐱','💨']},
     {t:'The cat sat and had a nap.', pic:['🐱','😴']},
-    {t:'Max is sad. The cat has the map!', pic:['😢','🗺️']},
-    {t:'Tap, tap! Max and Cubi pat the cat.', pic:['cubi','🐱']},
-    {t:'The cat is a pal. Max has the map!', pic:['🐱','❤️','🗺️']},
+    {t:'Max is sad. Where is the map?', pic:['😢','❓']},
+    {t:'Look! The cat is on the map.', pic:['🐱','🗺️']},
+    {t:'Max and Cubi pat the cat. The cat is a pal!', pic:['cubi','🐱','❤️']},
   ]},
   {id:'st_o', unlock:'b1u10', world:'w2', title:'The Hot Pot', ko:'뜨거운 냄비', cover:'🍲', pages:[
     {t:'Bob the dog has a pot.', pic:['🐶','🍲']},
@@ -37,19 +41,19 @@ export const STORIES = [
   ]},
   {id:'st_e', unlock:'b1u11', world:'w2', title:'Ten Red Hens', ko:'빨간 암탉 열 마리', cover:'🐔', pages:[
     {t:'Ted has ten red hens.', pic:['🔟','🐔']},
-    {t:'The hens get wet.', pic:['🐔','💦']},
-    {t:'Max gets a net.', pic:['hero','🥅']},
-    {t:'Cubi fed the ten hens.', pic:['cubi','🐔']},
-    {t:'The hens nap on a bed.', pic:['🐔','🛏️']},
-    {t:'Ten hens. Ten red pets. Yes!', pic:['🐔','❤️']},
+    {t:'Oh no! The hens are wet.', pic:['🐔','💦']},
+    {t:'Max and Cubi help the hens.', pic:['hero','cubi']},
+    {t:'They get the hens a bed.', pic:['🛏️']},
+    {t:'Ten red hens nap in the bed.', pic:['🐔','😴']},
+    {t:'Ted said, "Thank you!"', pic:['😊','❤️']},
   ]},
   {id:'st_i', unlock:'b1u12', world:'w2', title:'The Big Dig', ko:'커다란 구덩이', cover:'⛏️', pages:[
-    {t:'Max and Cubi dig in a pit.', pic:['hero','⛏️']},
-    {t:'Dig, dig, dig! It is a big pit.', pic:['⛏️','🕳️']},
-    {t:'A pig sits in the pit.', pic:['🐷','🕳️']},
-    {t:'The pig did a big hop!', pic:['🐷','⬆️']},
-    {t:'Max gets a pin and a kit.', pic:['📌','🧰']},
-    {t:'Max and the pig win!', pic:['🏆','🐷']},
+    {t:'Max and Cubi dig a big pit.', pic:['hero','⛏️']},
+    {t:'Dig, dig, dig! The pit is big.', pic:['⛏️','🕳️']},
+    {t:'Look! A pig is in the pit.', pic:['🐷','🕳️']},
+    {t:'The pig can not get out.', pic:['🐷','😢']},
+    {t:'Max and Cubi help the pig.', pic:['hero','cubi']},
+    {t:'The pig did a big hop. Thank you!', pic:['🐷','⬆️']},
   ]},
   {id:'st_u', unlock:'b1u13', world:'w2', title:'Bug Fun', ko:'벌레의 즐거운 하루', cover:'🐛', pages:[
     {t:'A bug is in the sun.', pic:['🐛','☀️']},
@@ -57,23 +61,23 @@ export const STORIES = [
     {t:'Cubi has a cup of nuts.', pic:['cubi','🥜']},
     {t:'The bug got the nuts! Yum!', pic:['🐛','😋']},
     {t:'Max hugs the bug.', pic:['hero','🤗']},
-    {t:'Up, up, up! The bug had fun.', pic:['⬆️','🎉']},
+    {t:'The bug had fun in the sun.', pic:['🐛','☀️','🎉']},
   ]},
   // ---------- w3 Deep Mine (magic e: one story per unit) ----------
   {id:'st_ae', unlock:'b2u1', world:'w3', title:'The Cave Game', ko:'동굴 게임', cover:'🦸', pages:[
     {t:'Max has a red cape.', pic:['hero','🦸']},
-    {t:'Max and Cubi go to a cave.', pic:['cubi','🕳️']},
-    {t:'In the cave is a big gate.', pic:['🚧']},
-    {t:'Wave at the gate! It is a game.', pic:['👋','🎮']},
-    {t:'Max made a cake at the gate.', pic:['🎂']},
-    {t:'Max and Cubi win the game. Yum, cake!', pic:['🏆','🎂']},
+    {t:'Max and Cubi go into a cave.', pic:['cubi','🕳️']},
+    {t:'They see a big gate.', pic:['🚧']},
+    {t:'"What is this game?" said Max.', pic:['hero','🎮']},
+    {t:'Max and Cubi wave at the gate. It can open!', pic:['👋','🚧']},
+    {t:'In the cave is a big cake. Yum!', pic:['🎂','😋']},
   ]},
   {id:'st_ie', unlock:'b2u2', world:'w3', title:'Five Kites', ko:'연 다섯 개', cover:'🪁', pages:[
     {t:'Max can ride a bike.', pic:['hero','🚲']},
     {t:'Cubi has five kites.', pic:['cubi','🪁']},
     {t:'The kites go up, up, up!', pic:['🪁','⬆️']},
     {t:'A kite is in the pine.', pic:['🪁','🌲']},
-    {t:'Max can hike up the pine. Fine!', pic:['🥾','🌲']},
+    {t:'Max can hike up the pine tree.', pic:['🥾','🌲']},
     {t:'Max got the kite. Five kites! Yes!', pic:['🪁','🎉']},
   ]},
   {id:'st_oe', unlock:'b2u3', world:'w3', title:'Bob and the Bone', ko:'밥과 뼈다귀', cover:'🦴', pages:[
@@ -82,7 +86,7 @@ export const STORIES = [
     {t:'Max gets a rope.', pic:['hero','🪢']},
     {t:'Max pokes the rope in the hole.', pic:['🪢','🕳️']},
     {t:'Bob gets the bone and runs home.', pic:['🐶','🏠']},
-    {t:'Bob is home, and Max is not sad.', pic:['🏠','😊']},
+    {t:'Bob is home with the bone. Good dog!', pic:['🏠','🐶']},
   ]},
   {id:'st_ue', unlock:'b2u4', world:'w3', title:'The Huge Cube', ko:'엄청 큰 큐브', cover:'🧊', pages:[
     {t:'June has a cute mule.', pic:['🫏','🥰']},
@@ -117,7 +121,7 @@ export const STORIES = [
     {t:'Max picks the lock with a stick.', pic:['🔒','🪵']},
     {t:'Thump! The chest pops up.', pic:['🧰','💥']},
     {t:'In the chest: a ring, a shell, and a fish!', pic:['💍','🐚','🐟']},
-    {t:'Then Max sings and Cubi winks. Such a fun trip!', pic:['🎤','😉']},
+    {t:'Then Max sings and Cubi winks. What a fun trip!', pic:['🎤','😉']},
   ]},
   // ---------- w7 Burning Underworld (other vowels, r-controlled) ----------
   {id:'st_rvowel', unlock:'b3u12', world:'w7', title:'The Fire Storm', ko:'불꽃 폭풍', cover:'🌋', pages:[
@@ -125,8 +129,8 @@ export const STORIES = [
     {t:'A storm! Max and Cubi run to a fort.', pic:['⛈️','🏰']},
     {t:'A loud owl sits on a torch.', pic:['🦉','🔦']},
     {t:'A girl in a purple shirt joins Max.', pic:['👧','🟣']},
-    {t:'Look! A shark of fire in the lava!', pic:['🦈','🌋']},
-    {t:'Wow! The storm is out. Good work, crew!', pic:['🎉','🏆']},
+    {t:'Look! A big red bird is in the lava!', pic:['🐦','🌋']},
+    {t:'Yay! The storm is over. Good work, crew!', pic:['🎉','🏆']},
   ]},
   // ---------- w8 The Final Dimension (sight words) ----------
   {id:'st_sight', unlock:'b4u5', world:'w8', title:'Who Can Help?', ko:'누가 도와줄까?', cover:'🐉', pages:[

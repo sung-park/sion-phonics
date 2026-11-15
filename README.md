@@ -63,7 +63,7 @@
 | 🔥 불타는 지하세계 | 3권 12단원 보스 | *The Fire Storm* (r-controlled · oi · ou · oo) |
 | 🌌 끝의 차원 | 4권 5단원 보스 | *Who Can Help?* (sight words) |
 
-허용 사이트워드(하트 워드): a, the, I, is, to, and, of, you, he, she, we, was, said, go, no, so, my, do, are, his, has, as + 4권에서 이미 배운 사이트워드. 등장인물 이름: Max(히어로), Cubi(큐비), Bob, Ted, June 등.
+허용 사이트워드(하트 워드): a, the, I, is, to, and, of, you, he, she, we, was, said, go, no, so, my, do, are, his, has, as, look, see, they, what, this, that, with, help, out, into, thank, good, over, open, where, here, there, come, have, for, one, two, little, all, be, me, by, put, your, oh, in, on, it, at, an, not, can, up + 4권에서 이미 배운 사이트워드. (보호자 확인: 문장이 자연스럽도록 아주 기초적인 고빈도 단어 몇 개는 해당 파닉스 단원 전이라도 통째로 읽는 단어로 허용해요.) 등장인물 이름: Max(히어로), Cubi(큐비), Bob, Ted, June 등.
 `node tools/validate_stories.mjs` 가 모든 단어를 검사해요: 열리는 단원까지 배운 그래핌(단모음 → 매직 e → 블렌드 → 모음 팀 → 이중글자 → r 모음 …)으로만 해독되는지, 아니면 이미 배운 단어/허용 사이트워드/이름인지. 하나라도 어긋나면 실패해요.
 
 ## 🗣️ 학교 영어 레슨 목록 (모두 오리지널 대화)
