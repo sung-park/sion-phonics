@@ -12,7 +12,7 @@ KO_VOICE = 'Lb7qkOn5hF8p7qfCDH8q'   # Annie KR – cute, young, Seoul
 MODEL = 'eleven_multilingual_v2'
 os.makedirs(RAW, exist_ok=True)
 # words whose first take was checked (phoneme recognizer) and sounded wrong; alternate prompt text
-WORD_FIX = {'sea':'Sea.', 'cane':'Cane.', 'boot':'boot', 'hog':'Hog.', 'hop':'Hop.', 'i':'eye.'}
+WORD_FIX = {'sea':'Sea.', 'cane':'Cane.', 'boot':'boot', 'hog':'Hog.', 'hop':'Hop.', 'i':'eye.', 'giraffe':'Giraffe.', 'hangeul':'Hangul.'}
 stats = {'requests':0, 'chars':0}
 
 def tts(text, voice=EN_VOICE, model=MODEL, speed=0.9, stability=0.6, timestamps=False):
@@ -21,8 +21,10 @@ def tts(text, voice=EN_VOICE, model=MODEL, speed=0.9, stability=0.6, timestamps=
     path = os.path.join(RAW, h + '.mp3')
     if os.path.exists(path): return path
     url = f'https://api.elevenlabs.io/v1/text-to-speech/{voice}' + ('/with-timestamps' if timestamps else '') + '?output_format=mp3_44100_128'
-    for attempt in range(4):
-        r = requests.post(url, headers={'xi-api-key':KEY}, json={'text':text, 'model_id':model, 'voice_settings':settings}, timeout=60)
+    for attempt in range(6):
+        try: r = requests.post(url, headers={'xi-api-key':KEY}, json={'text':text, 'model_id':model, 'voice_settings':settings}, timeout=60)
+        except requests.exceptions.RequestException:   # transient network/SSL errors: retry (raw cache prevents double billing)
+            time.sleep(3*(attempt+1)); continue
         if r.status_code == 200: break
         if r.status_code == 429: time.sleep(3*(attempt+1)); continue
         raise RuntimeError(f'{r.status_code} {r.text[:200]} for {text!r}')
@@ -57,7 +59,7 @@ def finish(src, dst, pad=0.06, norm='loud'):
     subprocess.run(['ffmpeg','-v','error','-y','-i',src,'-af',af,'-ac','1','-ar','44100','-b:a','64k',dst], check=True)
 
 # spoken forms inside story / talk sentences (display text keeps the original spelling)
-SPOKEN = {'Cubi':'Q-bee'}
+SPOKEN = {'Cubi':'Q-bee', 'Hangeul':'Hangul'}
 SPOKEN_RE = re.compile(r'\b(' + '|'.join(SPOKEN) + r')\b')
 
 def finish_timed(src, dst, spoken, lead=0.08, tail=0.25):
