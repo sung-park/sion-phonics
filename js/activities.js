@@ -424,7 +424,81 @@ R.talk_reply = (s, ctx) => {
   ctx.say('talk_reply').then(replay);
 };
 
+// ---------- 학교 영어 5–6학년: reading passage, sentence building, spelling ----------
+const shuffleA = a => { a=[...a]; for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+/** read a short passage (tap words, 🔊 reads with highlighting), then answer one question */
+R.talk_read = (s, ctx) => {
+  const r = s.lesson.read; const toks = tokenize(r.t);
+  const opts = shuffleA(r.opts.map((o,i)=>({o, ok:i===r.a})));
+  const node = h(`<div class="talk-read"><div class="passage card"><div class="sentence story-text">${toks.map(t=>`<button class="sw" data-w="${esc(t.word||'')}">${esc(t.text)}</button>`).join('')}</div>
+      <button class="btn blue small readp">🔊 읽어 줘</button></div>
+    <div class="rq hidden"><div class="talk-row small">${cubiFig(64)}<button class="tbubble left qb">${esc(r.q)}</button></div>
+      <div class="optlist">${opts.map(x=>`<button class="optline" data-v="${esc(x.o)}">${esc(x.o)}</button>`).join('')}</div></div></div>`);
+  ctx.stage.append(node);
+  const words = [...node.querySelectorAll('.sw')]; let reading = 0;
+  const readAloud = async () => { const my = ++reading; const tm = (await A.storyTimings())[r.t]; let t0 = null;
+    const p = A.play('st', r.t, {onstart:t=>{ t0 = t; }});
+    if (tm && tm.length === words.length){ const tick = () => { if (my !== reading) return; if (t0 !== null){ const t = A.now()-t0; words.forEach((w,i)=>w.classList.toggle('lit', t >= tm[i][0]-0.03 && t < (tm[i+1] ? tm[i+1][0]-0.03 : tm[i][1]+0.25))); }
+      if (A.audioState.playing || t0 === null) requestAnimationFrame(tick); else words.forEach(w=>w.classList.remove('lit')); }; requestAnimationFrame(tick); }
+    await p; if (my === reading) words.forEach(w=>w.classList.remove('lit')); };
+  words.forEach(b=>b.onclick = async ()=>{ const w = b.dataset.w; if (!w) return; reading++; words.forEach(x=>x.classList.remove('lit')); b.classList.add('lit'); await A.play('w', w); b.classList.remove('lit'); });
+  const rq = node.querySelector('.rq');
+  const ask = () => { if (!rq.classList.contains('hidden')) return; rq.classList.remove('hidden'); setTimeout(()=>rq.scrollIntoView({block:'nearest', behavior:'smooth'}), 50); A.play('tk', r.q); };
+  node.querySelector('.readp').onclick = async ()=>{ A.unlock(); await readAloud(); ask(); };
+  node.querySelector('.qb').onclick = ()=>A.play('tk', r.q);
+  ctx.replay = async ()=>{ await readAloud(); ask(); };
+  choice(ctx, node, [...node.querySelectorAll('.optline')], v=>opts.find(x=>x.o===v)?.ok, {replay: ()=>A.play('tk', r.q), onRight: async ()=>{ await praise(); }});
+  ctx.say('talk_read').then(async ()=>{ await readAloud(); ask(); });
+};
+/** put the words of a sentence in order (sentence from the lesson; Korean meaning as the hint) */
+R.talk_build = (s, ctx) => {
+  const parts = s.text.split(/\s+/); const order = shuffleA(parts.map((p,i)=>({p,i})));
+  if (order.every((x,k)=>x.i===k) && parts.length > 1) order.reverse();
+  const node = h(`<div class="talk-build"><div class="bhint"><span class="ko">${esc(s.ko)}</span><button class="iconbtn sm hear" aria-label="듣기">🔊</button></div>
+    <div class="bslots">${parts.map((_,i)=>`<span class="bslot ${i===0?'active':''}"></span>`).join('')}</div>
+    <div class="tiles wtiles">${order.map(x=>`<button class="tile wt" data-i="${x.i}">${esc(x.p)}</button>`).join('')}</div></div>`);
+  ctx.stage.append(node);
+  const replay = () => A.play('tk', s.text); ctx.replay = replay; node.querySelector('.hear').onclick = replay;
+  const slots = [...node.querySelectorAll('.bslot')], tiles = [...node.querySelectorAll('.wt')]; let k = 0, errs = 0, se = 0;
+  tiles.forEach(t=>t.onclick = async ()=>{
+    if (t.classList.contains('used') || k >= parts.length) return;
+    if (+t.dataset.i === k || t.textContent === parts[k]){
+      t.classList.add('used'); tiles.forEach(x=>x.classList.remove('hint')); slots[k].textContent = parts[k]; slots[k].classList.add('filled'); slots[k].classList.remove('active'); A.sfx('place');
+      k++; se = 0; if (k < parts.length) slots[k].classList.add('active');
+      else { await A.wait(300); A.sfx('ok'); ctx.fx.burst(node.querySelector('.bslots'), 16); ctx.fx.xp(slots[slots.length-1], errs===0?15:8); ctx.mascotHop(); await A.play('tk', s.text); await praise(); ctx.done({correct: errs===0, attempts: errs}); }
+    } else {
+      errs++; se++; t.classList.add('no'); A.sfx('soft'); setTimeout(()=>t.classList.remove('no'), 500);
+      if (se >= 2){ const right = tiles.find(x=>!x.classList.contains('used') && (+x.dataset.i === k || x.textContent === parts[k])); if (right) right.classList.add('hint'); }
+    }
+  });
+  ctx.say('talk_build').then(replay);
+};
+/** spell a lesson word by tapping letters (never a keyboard) */
+R.talk_spell = (s, ctx) => {
+  const word = s.word.toLowerCase(); const letters = [...word];
+  const pool = shuffleA([...letters, ...s.extra]);
+  const node = h(`<div class="talk-spell"><button class="piccard spellpic">${talkPic(s.pic)}<span class="vko">${esc(s.ko)}</span></button>
+    <div class="slots">${letters.map((_,i)=>`<div class="slot ${i===0?'active':''}"></div>`).join('')}</div>
+    <div class="tiles">${pool.map((c,i)=>`<button class="tile" data-v="${c}" data-i="${i}">${c}</button>`).join('')}</div></div>`);
+  ctx.stage.append(node);
+  const replay = () => A.play('w', word); ctx.replay = replay; node.querySelector('.spellpic').onclick = replay;
+  const slots = [...node.querySelectorAll('.slot')], tiles = [...node.querySelectorAll('.tile')]; let k = 0, errs = 0, se = 0;
+  tiles.forEach(t=>t.onclick = async ()=>{
+    if (t.classList.contains('used') || k >= letters.length) return;
+    if (t.dataset.v === letters[k]){
+      t.classList.add('used'); tiles.forEach(x=>x.classList.remove('hint')); slots[k].textContent = letters[k]; slots[k].classList.add('filled'); slots[k].classList.remove('active'); A.sfx('place');
+      k++; se = 0; if (k < letters.length) slots[k].classList.add('active');
+      else { await A.wait(300); A.sfx('ok'); ctx.fx.burst(node.querySelector('.slots'), 16); ctx.fx.xp(slots[slots.length-1], errs===0?15:8); ctx.mascotHop(); await A.play('w', word); await praise(); ctx.done({correct: errs===0, attempts: errs}); }
+    } else {
+      errs++; se++; t.classList.add('no'); A.sfx('soft'); setTimeout(()=>t.classList.remove('no'), 500);
+      if (se >= 2){ const right = tiles.find(x=>!x.classList.contains('used') && x.dataset.v === letters[k]); if (right) right.classList.add('hint'); }
+    }
+  });
+  ctx.say('talk_spell').then(replay);
+};
+
 export const RENDER = R;
 export const PROMPT_KEY = { intro:'intro', pick_sound:'pick_sound', which_letter:'which_letter', first_sound:'first_sound', case_match:'case_match',
   tap_all:'tap_all', blend:'blend', build:'build', pick_word:'pick_word', pic_match:'pic_match', sentence:'sentence', magic:'magic', sight_intro:'sight', mnemonic:'trainer',
-  talk_listen:'talk_listen', talk_vocab:'talk_vocab', talk_echo:'talk_echo', talk_pic:'talk_pic', talk_reply:'talk_reply' };
+  talk_listen:'talk_listen', talk_vocab:'talk_vocab', talk_echo:'talk_echo', talk_pic:'talk_pic', talk_reply:'talk_reply',
+  talk_read:'talk_read', talk_build:'talk_build', talk_spell:'talk_spell' };

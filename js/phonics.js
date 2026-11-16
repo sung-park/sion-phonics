@@ -1,6 +1,7 @@
 // Phonics engine: segments words into graphemes + phonemes for blending & building.
 import { STORIES } from './stories.js';
-import { talkAudio } from './talk.js';
+import { talkAudio, talkPassages, TALK } from './talk.js';
+import { READERS } from './readers.js';
 import { GRAPHEME_SOUND, UNITS, LETTERS, PRAISE, ENCOURAGE, EN_LINES, KO, SAY, SHOW, CONFUSIONS, PHONEMES } from './data.js';
 
 const VOWELS = 'aeiou';
@@ -104,6 +105,22 @@ export function collectAudio(){
   for (const st of STORIES){ pages.add(st.title); st.pages.forEach(p=>{ pages.add(p.t); storyTokens(p.t).forEach(t=>t.word&&words.add(t.word)); }); }
   const NAMES = {sam:'Sam',phil:'Phil',fred:'Fred',ted:'Ted',bob:'Bob',i:'I',june:'June',max:'Max',cubi:'Q-bee',pam:'Pam',ben:'Ben'};
   const ws = {}; for (const w0 of words){ const w = baseWord(w0).toLowerCase(); ws[w] = NAMES[w] || sayWord(w); }
+  // v1.4: 학년별 읽기 책 + 5–6학년 passages (category st) and their tappable words, 단어 도감 words, quiz questions (tk).
+  // New word keys keep the spoken spelling of the text: apostrophes (don’t → "don't") and capitals for names (Mina).
+  const texts = [...READERS.flatMap(r=>r.pages.map(p=>p.t)), ...talkPassages()];   // titles are Title Case, so they don't count
+  const NAME_SET = new Set(); for (const x of texts){ const tk = x.split(/\s+/); tk.forEach((t,i)=>{ const raw = t.replace(/[\u2019]/g,"'").replace(/^[^A-Za-z]+|[^A-Za-z]+$/g,'');
+    if (i>0 && /^[A-Z]/.test(raw) && !/[.!?:\u201c"]$/.test(tk[i-1]) && !/^[\u201c"]/.test(t)) NAME_SET.add(raw.replace(/'s$/,'')); }); }
+  const isName = r => NAME_SET.has(r) || NAME_SET.has(r.replace(/'s$/,''));
+  const spoken = (tok, i, toks) => { let raw = tok.replace(/[\u2019]/g,"'").replace(/^[^A-Za-z]+|[^A-Za-z]+$/g,'');
+    if (!/^(I|I'm|I'll|I've|I'd|X)$/.test(raw) && !isName(raw)) raw = raw.charAt(0).toLowerCase() + raw.slice(1);
+    if (raw==='Mr') raw = 'Mister'; if (raw==='Ms') raw = 'Ms.';
+    return raw === 'Cubi' ? 'Q-bee' : raw.replace(/^Cubi's$/,"Q-bee's"); };
+  const addText = (text, keyFn) => { const toks = text.split(/\s+/); keyFn(text).forEach((t,i)=>{ if (!t.word) return; const k = t.word.toLowerCase(); if (!(k in ws)) ws[k] = spoken(toks[i], i, toks); }); };
+  for (const r of READERS){ pages.add(r.title); r.pages.forEach(p=>pages.add(p.t)); }
+  for (const r of READERS){ addText(r.title, storyTokens); r.pages.forEach(p=>addText(p.t, storyTokens)); }
+  for (const t of talkPassages()){ pages.add(t); addText(t, tokenize); }
+  for (const t of TALK) for (const [en] of t.words){ const k = en.toLowerCase(); if (!(k in ws)) ws[k] = en; }
+  const quizQ = READERS.flatMap(r=>r.quiz.map(q=>q.q));
   return {
     w: ws,
     s: Object.fromEntries([...sentences].map(s=>[s,s])),
@@ -112,6 +129,6 @@ export function collectAudio(){
     x: Object.fromEntries([...PRAISE,...ENCOURAGE,...EN_LINES].map(s=>[s,s])),
     ko: {...KO},
     st: Object.fromEntries([...pages].map(s=>[s,s])),
-    tk: Object.fromEntries(talkAudio().map(s=>[s,s])),
+    tk: Object.fromEntries([...talkAudio(), ...quizQ].map(s=>[s,s])),
   };
 }

@@ -174,17 +174,29 @@ export function unitItems(u){
 // ---------- 학교 영어 lesson: listen → vocab → listen&choose → picture quizzes → reply ----------
 import { TALK, talkById } from './talk.js';
 export function buildTalk(id){
-  const L = talkById(id); const others = TALK.filter(t=>t.id!==id);
+  const L = talkById(id); const others = TALK.filter(t=>t.id!==id && t.g===L.g); const pool = others.length >= 2 ? others : TALK.filter(t=>t.id!==id);
   const short = store.state().settings.len === 'short';
-  const pics = pick(L.vocab, short ? 2 : 3);
   const picStep = v => ({type:'talk_pic', lesson:L, target:v[0], options:shuffle([v, ...pick(L.vocab.filter(x=>x!==v), 2)])});
-  const steps = [
-    {type:'talk_listen', lesson:L},
-    {type:'talk_vocab', lesson:L},
-    {type:'talk_echo', lesson:L, who:'C', target:L.lines[0][1], options:shuffle([L.lines[0][1], ...pick(others.map(t=>t.lines[0][1]), 2)])},
-    picStep(pics[0]), picStep(pics[1]),
-    {type:'talk_reply', lesson:L, question:L.lines[0][1], target:L.lines[1][1], options:shuffle([L.lines[1][1], ...pick(others.map(t=>t.lines[1][1]), 2)])},
-  ];
-  if (pics[2]) steps.push(picStep(pics[2]));
+  // a question/answer pair: Cubi asks, the hero answers (later grades have two pairs)
+  const pairs = []; for (let k=0;k+1<L.lines.length;k+=2) if (L.lines[k][0]==='C' && L.lines[k+1][0]==='H') pairs.push([L.lines[k][1], L.lines[k+1][1]]);
+  const [q, a] = pick(pairs, 1)[0] || [L.lines[0][1], L.lines[1][1]];
+  const answers = pool.flatMap(t=>t.lines.filter(l=>l[0]==='H').map(l=>l[1])).filter(x=>x!==a);
+  const reply = {type:'talk_reply', lesson:L, question:q, target:a, options:shuffle([a, ...pick(answers, 2)])};
+  const echo = {type:'talk_echo', lesson:L, who:'C', target:L.lines[0][1], options:shuffle([L.lines[0][1], ...pick(pool.map(t=>t.lines[0][1]), 2)])};
+  if (L.g <= 4){
+    const pics = pick(L.vocab, short ? 2 : 3);
+    const steps = [{type:'talk_listen', lesson:L}, {type:'talk_vocab', lesson:L}, echo, picStep(pics[0]), picStep(pics[1]), reply];
+    if (pics[2]) steps.push(picStep(pics[2]));
+    return steps;
+  }
+  // 5–6학년: listen → expressions → (echo) → reply → reading passage → sentence building → spelling
+  const buildable = L.vocab.filter(v=>{ const n = v[0].split(/\s+/).length; return n >= 3 && n <= 7; });
+  const bv = pick(buildable.length ? buildable : L.vocab, 1)[0];
+  const spellable = L.words.filter(w=>/^[a-z]{3,8}$/.test(w[0]) && !w[1].startsWith('#'));
+  const sw = pick(spellable.length ? spellable : L.words.filter(w=>/^[a-z]{3,9}$/.test(w[0])), 1)[0];
+  const extra = pick('abcdefghijklmnoprstuwy'.split('').filter(c=>!sw[0].includes(c)), 2);
+  const steps = [{type:'talk_listen', lesson:L}, {type:'talk_vocab', lesson:L}];
+  if (!short) steps.push(echo);
+  steps.push(reply, {type:'talk_read', lesson:L}, {type:'talk_build', lesson:L, text:bv[0], ko:bv[2]}, {type:'talk_spell', lesson:L, word:sw[0], pic:sw[1], ko:sw[2], extra});
   return steps;
 }

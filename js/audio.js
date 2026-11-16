@@ -46,7 +46,7 @@ export function rel(cat, key){
 export const has = (cat,key)=>!!rel(cat,key);
 // story page word timings (generated with ElevenLabs character alignment)
 let timings = null;
-export async function storyTimings(){ if (!timings) timings = fetch('assets/audio/st/timings.json?v=8').then(r=>r.json()).catch(()=>({})); return timings; }
+export async function storyTimings(){ if (!timings) timings = fetch('assets/audio/st/timings.json?v=9').then(r=>r.json()).catch(()=>({})); return timings; }
 export const now = () => ctx ? ctx.currentTime : performance.now()/1000;
 function load(r){
   if (!buffers.has(r)){

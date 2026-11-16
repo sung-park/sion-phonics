@@ -6,7 +6,9 @@ const fresh = () => ({
   v:1, name:'', color:'red', created:Date.now(), xp:0, streak:{count:0,last:null},
   units:{}, items:{}, conf:{}, inv:{}, suit:[], trainer:{}, sessions:[], days:{}, missionCount:0,
   stories:{}, talk:{}, talkGate:null,   // added in v1.3 (story scrolls, 학교 영어); defaults keep old saves valid
-  settings:{calm:false, ko:true, sfx:true, len:'normal', unlockAll:false, start:'b1u1'},
+  talkTab:null, libTab:null, dexTab:null, // added in v1.4 (학년별 학교 영어 · 읽기 책 · 단어 도감 tabs)
+  // v1.4: grade = highest 학교 영어 grade the parent has opened (3–6). Older saves get 3 through the settings merge.
+  settings:{calm:false, ko:true, sfx:true, len:'normal', unlockAll:false, start:'b1u1', grade:3},
 });
 let S = load();
 function load(){ try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.v===1) return {...fresh(), ...s, settings:{...fresh().settings, ...(s.settings||{})}}; } catch(e){} return fresh(); }
@@ -65,6 +67,8 @@ export function logSession(entry){ S.sessions.unshift({d:Date.now(), ...entry});
 export function set(k, v){ S[k] = v; save(); }
 // ---- story scrolls & talk lessons ----
 export function storyRead(id){ const r = S.stories[id] || (S.stories[id] = {n:0, at:0}); const first = !r.n; r.n++; r.at = Date.now(); save(); return first; }
+// graded readers: best comprehension-quiz score (0..1), kept on the same story record (field added in v1.4)
+export function storyQuiz(id, score){ const r = S.stories[id] || (S.stories[id] = {n:0, at:0}); r.q = Math.max(r.q||0, score); save(); }
 export function talkDone(id, acc){ const t = S.talk[id] || (S.talk[id] = {n:0, best:0, at:0}); const first = !t.n; t.n++; t.best = Math.max(t.best, acc); t.at = Date.now();
   if (first) S.talkGate = {mc:S.missionCount, day:today()}; save(); return first; }
 export function setSetting(k, v){ S.settings[k] = v; save(); }
