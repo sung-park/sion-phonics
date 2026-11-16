@@ -43,6 +43,19 @@ export const BLOCKS = {
   emerald: {name:'에메랄드 광석', rarity:4, tex:ore(STONE,['#3ee07a','#1fb85a'],ORE_SPOTS)},
   goldblock:{name:'금 블록', rarity:5, tex:(f,x,y,r)=> (x===0||y===0) ? '#fff2a8' : (x===7||y===7) ? '#d9a21c' : ['#ffd84a','#f9cc33'][Math.floor(r()*2)]},
   diamondblock:{name:'다이아 블록', rarity:5, tex:(f,x,y,r)=> (x===0||y===0) ? '#d9fffd' : (x===7||y===7) ? '#2fb7b8' : ['#7ff3ee','#65e6e2'][Math.floor(r()*2)]},
+  // 학교 영어 grade biomes (v1.4): 3학년 벚꽃 숲 · 4학년 사막 마을 · 5학년 눈 덮인 산 · 6학년 하늘 섬
+  cherry_log:{name:'벚나무 통나무', rarity:1, tex:(f,x,y,r)=> f==='top' ? (Math.max(Math.abs(x-3.5),Math.abs(y-3.5))%2<1 ? '#e7b7a6':'#d39a8a') : (x%3===0 ? '#3d2330' : ['#5a3442','#4e2b39','#633a49'][Math.floor(r()*3)])},
+  cherry_leaf:{name:'벚꽃잎 블록', rarity:1, tex:noise(['#ffc0d6','#ffb0cb','#ff9fbf','#ffd3e2','#f792b6'])},
+  cherry_plank:{name:'벚나무 판자', rarity:2, tex:(f,x,y,r)=> y%4===3 ? '#c9878f' : ((x+(y>3?4:0))%8===0 ? '#d79aa1' : ['#f3c4c6','#ecb8bb','#f7d0d1'][Math.floor(r()*3)])},
+  sandstone:{name:'사암', rarity:2, tex:(f,x,y,r)=> f==='top' ? ['#ead8a0','#e3cf92','#efdfad'][Math.floor(r()*3)] : (y===2||y===5) ? '#c9b077' : ['#e3cf92','#dcc685','#e9d69d'][Math.floor(r()*3)]},
+  cactus:  {name:'선인장 블록', rarity:2, tex:(f,x,y,r)=> f==='top' ? ((x===0||y===0||x===7||y===7) ? '#2d7a2a' : '#5bb04a') : (x%3===1 ? '#2d7a2a' : (y%3===0 && x%3===2) ? '#e8e2b0' : ['#4a9e3c','#55aa45'][Math.floor(r()*2)])},
+  terracotta:{name:'테라코타', rarity:3, tex:(f,x,y,r)=> (y===3||y===4) ? ['#e07b39','#d86f2d'][Math.floor(r()*2)] : ['#b8653f','#ad5b37','#c06c45'][Math.floor(r()*3)]},
+  packed_ice:{name:'단단한 얼음', rarity:2, tex:(f,x,y,r)=> (x+y)%5===0 ? '#e9f5ff' : ['#8fbff0','#86b6ea','#9cc8f4'][Math.floor(r()*3)]},
+  spruce:  {name:'가문비 통나무', rarity:2, tex:(f,x,y,r)=> f==='top' ? (Math.max(Math.abs(x-3.5),Math.abs(y-3.5))%2<1 ? '#7a5a3a':'#664a2f') : (x%3===0 ? '#2b1d12' : ['#3d2a1a','#46301e','#382616'][Math.floor(r()*3)])},
+  blue_ice:{name:'푸른 얼음', rarity:3, tex:(f,x,y,r)=> (x===y||x+y===7) ? '#d4ecff' : ['#4f8fe8','#5c9cf0','#4583dd'][Math.floor(r()*3)]},
+  amethyst:{name:'자수정 블록', rarity:3, tex:(f,x,y,r)=> ((x+y)%4===0 || (x-y+8)%5===0) ? '#e6c8ff' : ['#9a5cf0','#8a4fe0','#a96bf7','#7a43cc'][Math.floor(r()*4)]},
+  skystone:{name:'하늘 돌', rarity:3, tex:(f,x,y,r)=> f==='top' ? ['#ffffff','#eef6ff','#e2efff'][Math.floor(r()*3)] : ['#b9d4f2','#a8c8ec','#c7defa'][Math.floor(r()*3)]},
+  starblock:{name:'별빛 블록', rarity:4, tex:(f,x,y,r)=> ((x===3||x===4)&&(y>=1&&y<=6)) || ((y===3||y===4)&&(x>=1&&x<=6)) ? '#fff3a8' : ['#24305e','#2c3a70','#1f2952'][Math.floor(r()*3)]},
   power:   {name:'파워 큐브', rarity:5, tex:(f,x,y,r)=> (x>=2&&x<=5&&y>=2&&y<=5) ? ((x===3||x===4)&&(y===3||y===4) ? '#e8ffff' : '#4ef2ff') : (x===0||y===0||x===7||y===7) ? '#5c6577' : '#3a4150'},
 };
 
