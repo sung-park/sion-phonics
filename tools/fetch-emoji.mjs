@@ -3,11 +3,13 @@ import { PIC } from '../js/data.js';
 import { emojiCode } from '../js/emoji.js';
 import { STORIES } from '../js/stories.js';
 import { TALK } from '../js/talk.js';
+import { READERS } from '../js/readers.js';
 import fs from 'node:fs';
 const extra = ['🦸','🏆','⭐','🔥','🔒','🎁','💎','🧱','⛏️','🛡️','👑','🚀','🧪','🔨','🌋','🏙️','☁️','🌿','🪨','⚙️','🎯','🔊','📖','✨','🎉','💪','🧭'];
 const story = STORIES.flatMap(s=>[s.cover, ...s.pages.flatMap(p=>p.pic)]).filter(p=>p!=='cubi'&&p!=='hero');
-const talk = TALK.flatMap(t=>[t.scene, ...t.vocab.map(v=>v[1])]).filter(p=>!p.startsWith('#'));
-const all = new Set([...Object.values(PIC), ...extra, ...story, ...talk, '📚','🗣️','📜','💿']);
+const talk = TALK.flatMap(t=>[t.scene, ...t.vocab.map(v=>v[1]), ...t.words.map(w=>w[1])]).filter(p=>!p.startsWith('#'));
+const readers = READERS.flatMap(r=>[r.cover, ...r.pages.flatMap(p=>p.pic)]).filter(p=>p!=='cubi'&&p!=='hero');
+const all = new Set([...Object.values(PIC), ...extra, ...story, ...talk, ...readers, '📚','🗣️','📜','💿']);
 fs.mkdirSync('assets/emoji',{recursive:true});
 let fail=[];
 for (const e of all){
