@@ -32,7 +32,7 @@ export const BLOCKS = {
   copper:  {name:'구리 광석', rarity:2, tex:ore(STONE,['#e0874f','#c46a36','#4fb39a'],ORE_SPOTS)},
   iron:    {name:'철 광석', rarity:2, tex:ore(STONE,['#d8b89a','#c9a383'],ORE_SPOTS)},
   ice:     {name:'얼음 블록', rarity:2, tex:(f,x,y,r)=> (x===y||x===y+4) ? '#e8f7ff' : ['#a9dcf5','#9bd2ee','#b6e3f8'][Math.floor(r()*3)]},
-  cloud:   {name:'구름 블록', rarity:2, tex:noise(['#ffffff','#f1f6fb','#e6eef7'])},
+  cloud:   {name:'눈 블록', rarity:2, tex:noise(['#ffffff','#f1f6fb','#e6eef7'])},
   gold:    {name:'금 광석', rarity:3, tex:ore(STONE,['#ffd84a','#f2b92a'],ORE_SPOTS)},
   sapphire:{name:'청금석 광석', rarity:3, tex:ore(STONE,['#3f7bff','#2a55d9'],ORE_SPOTS)},
   ruby:    {name:'붉은돌 광석', rarity:3, tex:ore(STONE,['#ff4d5e','#d92b3e'],ORE_SPOTS)},
